@@ -38,7 +38,6 @@
 #include <algorithm>
 #include <glib-object.h>
 #include <json-glib/json-glib.h>
-#include "timeMeasureTool.h"
 
 #include "Websocket.h"
 #if 1
