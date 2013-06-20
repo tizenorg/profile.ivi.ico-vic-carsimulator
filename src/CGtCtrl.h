@@ -27,7 +27,7 @@
 #include <string>
 
 #include <cstddef>
-#include <strstream>
+#include <sstream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -36,7 +36,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <glib-object.h>
+#include <glib.h>
 #include <json-glib/json-glib.h>
 
 #include "Websocket.h"
