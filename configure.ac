@@ -16,6 +16,10 @@ AC_PROG_CC
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
 
+PKG_CHECK_MODULES([GLIB], [glib-2.0])
+PKG_CHECK_MODULES([JSON], [json-glib-1.0])
+PKG_CHECK_MODULES([WEBSOCKET], [libwebsockets])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T

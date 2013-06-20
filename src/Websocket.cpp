@@ -207,10 +207,19 @@ bool WebsocketIF::init(int port, char *interface,
                        pthread_mutex_t * mtx,
                        pthread_cond_t * cnd, WebsocketRecvQueue * recvqueue)
 {
-    context = libwebsocket_create_context(CONTEXT_PORT_NO_LISTEN,
-                                          interface, protocols,
-                                          libwebsocket_internal_extensions,
-                                          NULL, NULL, -1, -1, 0);
+    struct lws_context_creation_info info;
+    memset(&info, 0, sizeof info);
+
+    info.iface = interface;
+    info.protocols = protocols;
+    info.gid = -1;
+    info.uid = -1;
+    info.extensions = libwebsocket_get_internal_extensions();
+    info.options = 0;
+
+
+    context = libwebsocket_create_context(&info);
+
     if (context == NULL) {
         std::cerr << "Failed to create context." << std::endl;
         return false;

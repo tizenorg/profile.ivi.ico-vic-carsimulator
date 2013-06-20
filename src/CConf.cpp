@@ -14,6 +14,8 @@
 
 #include "CConf.h"
 
+#include <unistd.h>
+
 CConf::CConf()
 {
     // TODO Auto-generated constructor stub
