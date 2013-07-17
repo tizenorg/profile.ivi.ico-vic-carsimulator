@@ -26,25 +26,9 @@ bool g_bStopFlag;
 std::queue < geoData > routeList;
 std::string msgQueue;
 int Daemon_MS;
-pthread_mutex_t m_websocket_mutex[] = {
-    PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER
-};
-
-pthread_cond_t m_websocket_cond[] = {
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER,
-    PTHREAD_COND_INITIALIZER
-};
-
-WebsocketRecvQueue m_websocket_queue[4];
 int nClient = 0;
 int nDelayedCallback = 0;
 
-int ViaSocket = -1;
 
 int ReadPriv = 0;
 int WritePriv = 0;
@@ -72,43 +56,16 @@ double g_GoalLatitude     =  35.49746;
 double g_GoalLongitude    = 139.40504;
 
 using namespace std;
-static int callback_data_def(libwebsocket_context *context,
-                             struct libwebsocket *wsi,
-                             enum libwebsocket_callback_reasons reason,
-                             void *user, void *in, size_t len);
-static int callback_ctrl_def(libwebsocket_context *context,
-                             struct libwebsocket *wsi,
-                             enum libwebsocket_callback_reasons reason,
-                             void *user, void *in, size_t len);
-static int callback_data_cust(libwebsocket_context *context,
-                              struct libwebsocket *wsi,
-                              enum libwebsocket_callback_reasons reason,
-                              void *user, void *in, size_t len);
-static int callback_ctrl_cust(libwebsocket_context *context,
-                              struct libwebsocket *wsi,
-                              enum libwebsocket_callback_reasons reason,
-                              void *user, void *in, size_t len);
-libwebsocket_protocols protocols[] = {
-    {"standarddatamessage-only", callback_data_def, 0},
-    {NULL, NULL, -1}
+#define _D_URI_FORM "ws://%s:%d"
+#define _D_HOST_STR "127.0.0.1"
+const int protocols_sz = 4;
+const char* protocolsName[protocols_sz] = {
+    "standarddatamessage-only",
+    "standardcontrolmessage-only",
+    "customdatamessage-only",
+    "customcontrolmessage-only"
 };
 
-libwebsocket_protocols protocols2[] = {
-    {"standardcontrolmessage-only", callback_ctrl_def, 0},
-    {NULL, NULL, -1}
-};
-
-libwebsocket_protocols protocols3[] = {
-    {"customdatamessage-only", callback_data_cust, 0},
-    {NULL, NULL, -1}
-};
-
-libwebsocket_protocols protocols4[] = {
-    {"customcontrolmessage-only", callback_ctrl_cust, 0},
-    {NULL, NULL, -1}
-};
-
-/* Modify I/F MessageQueue -> Websocket End */
 
 CGtCtrl::CGtCtrl()
 {
@@ -192,46 +149,15 @@ bool CGtCtrl::Initialize()
         return false;
     }
 
-    /* Modify I/F MessageQueue -> Websocket Start */
-    if (!m_websocket_client[0].start(m_websocket_port[0], "lo",
-                                     protocols,
-                                     &m_websocket_mutex[0],
-                                     &m_websocket_cond[0],
-                                     &m_websocket_queue[0])) {
-        return false;
-    }
-    if (pthread_cond_wait(&m_websocket_cond[0], &m_websocket_mutex[0]) != 0) {
-        std::cerr << "Failed to wait signal" << std::endl;
-    }
-    if (!m_websocket_client[1].start(m_websocket_port[1], "lo",
-                                     protocols2,
-                                     &m_websocket_mutex[1],
-                                     &m_websocket_cond[1],
-                                     &m_websocket_queue[1])) {
-        return false;
-    }
-    if (pthread_cond_wait(&m_websocket_cond[1], &m_websocket_mutex[1]) != 0) {
-        std::cerr << "Failed to wait signal" << std::endl;
-    }
-    if (!m_websocket_client[2].start(m_websocket_port[2], "lo",
-                                     protocols3,
-                                     &m_websocket_mutex[2],
-                                     &m_websocket_cond[2],
-                                     &m_websocket_queue[2])) {
-        return false;
-    }
-    if (pthread_cond_wait(&m_websocket_cond[2], &m_websocket_mutex[2]) != 0) {
-        std::cerr << "Failed to wait signal" << std::endl;
-    }
-    if (!m_websocket_client[3].start(m_websocket_port[3], "lo",
-                                     protocols4,
-                                     &m_websocket_mutex[3],
-                                     &m_websocket_cond[3],
-                                     &m_websocket_queue[3])) {
-        return false;
-    }
-    if (pthread_cond_wait(&m_websocket_cond[3], &m_websocket_mutex[3]) != 0) {
-        std::cerr << "Failed to wait signal" << std::endl;
+    char uri[128];
+    for (int i = 0; i < protocols_sz; i++) {
+        sprintf(uri, _D_URI_FORM, _D_HOST_STR, m_ambpicomm_port[i]);
+        if (false == m_ambpicomm_client[i].start(uri, protocolsName[i])) {
+            return false;   // connect fail
+        }
+        if (false == m_ambpicomm_client[i].threadCondWait()) {
+            std::cerr << "Failed to wait signal (" << i << ")" << std::endl;
+        }
     }
 
     const char *vi = "LOCATION";
@@ -257,6 +183,7 @@ bool CGtCtrl::Terminate()
 #define sDIRECTION      "DIRECTION"
 #define sLOCATION       "LOCATION"
 #define sSHIFT          "SHIFT"
+#define sLIGHTSTATUS    "LIGHTSTATUS"
 void CGtCtrl::Run()
 {
     g_bStopFlag = true;
@@ -347,11 +274,15 @@ void CGtCtrl::Run()
                     shiftpos = pmCar.getValue();
                 }
             }
-
+            /**
+             * TURN SIGNAL(WINKER) & LIGHTSTATUS
+             */
+            bool bTurnSignal = false;
             if (number == myConf.m_nWinkR) {
                 if (value != 0) {
 
                     m_stVehicleInfo.bWinkR = !m_stVehicleInfo.bWinkR;
+                    m_stVehicleInfo.bWinkL = false;
                     if (m_stVehicleInfo.bWinkR)
                         m_stVehicleInfo.nWinkerPos = WINKER_RIGHT;
                     else
@@ -361,12 +292,14 @@ void CGtCtrl::Run()
                     int wpos =
                         m_stVehicleInfo.nWinkerPos == WINKER_RIGHT ? 1 : 0;
                     SendVehicleInfo(dataport_def, vi, wpos);
+                    bTurnSignal = true;
                 }
             }
 
             if (number == myConf.m_nWinkL) {
                 if (value != 0) {
                     m_stVehicleInfo.bWinkL = !m_stVehicleInfo.bWinkL;
+                    m_stVehicleInfo.bWinkR = false;
                     if (m_stVehicleInfo.bWinkL)
                         m_stVehicleInfo.nWinkerPos = WINKER_LEFT;
                     else
@@ -376,7 +309,21 @@ void CGtCtrl::Run()
                     int wpos =
                         m_stVehicleInfo.nWinkerPos == WINKER_LEFT ? 2 : 0;
                     SendVehicleInfo(dataport_def, vi, wpos);
+                    bTurnSignal = true;
                 }
+            }
+
+            if (true == bTurnSignal) {
+                const size_t LSsz = 8;                                                              
+                char data[LSsz];                                                                    
+                memset(data, 0, sizeof(data));
+                if (WINKER_LEFT == m_stVehicleInfo.nWinkerPos) {
+                    data[1] = 1;
+                }
+                else if (WINKER_RIGHT == m_stVehicleInfo.nWinkerPos) {
+                    data[2] = 1;
+                }
+                SendVehicleInfo(dataport_def, sLIGHTSTATUS, &data[0], LSsz);
             }
 
             break;
@@ -1006,7 +953,7 @@ bool CGtCtrl::sendVehicleInfo( /*int & send_id, long priority, */
     SetMQKeyData(&mqMsg[0], sizeof(mqMsg), priority, key, adata,
                  sizeof(adata));
 
-    if (!m_websocket_client[type].
+    if (!m_ambpicomm_client[type].
         send(reinterpret_cast < char *>(mqMsg), sizeof(mqMsg)))
     {
         std::cerr << "Failed to send data(" << errno << ")." << std::endl;
@@ -1335,7 +1282,7 @@ bool CGtCtrl::LoadConfigJsonCommon(JsonReader *reader)
                            subkey1, confreaderror->message);
                     return false;
                 }
-                m_websocket_port[i * 2] = json_reader_get_int_value(reader);
+                m_ambpicomm_port[i * 2] = json_reader_get_int_value(reader);
                 json_reader_end_member(reader);
 
                 if (!json_reader_read_member(reader, subkey2)) {
@@ -1351,7 +1298,7 @@ bool CGtCtrl::LoadConfigJsonCommon(JsonReader *reader)
                            subkey2, confreaderror->message);
                     return false;
                 }
-                m_websocket_port[i * 2 + 1] =
+                m_ambpicomm_port[i * 2 + 1] =
                     json_reader_get_int_value(reader);
                 json_reader_end_member(reader);
                 json_reader_end_member(reader);
@@ -1529,161 +1476,6 @@ void CGtCtrl::CheckSendResult(int mqid)
         }
     }
 }
-
-/* Modify I/F MessageQueue -> Websocket Start */
-static int callback_data_def(libwebsocket_context * context,
-                             struct libwebsocket *wsi,
-                             enum libwebsocket_callback_reasons reason,
-                             void *user, void *in, size_t len)
-{
-    switch (reason) {
-    case LWS_CALLBACK_CLIENT_RECEIVE:{
-            if (pthread_mutex_lock(&m_websocket_mutex[dataport_def]) != 0) {
-                std::cerr << "Failed to lock mutex" << std::endl;
-            }
-            char recvDataMsgBuf[sizeof(KeyDataMsg_t) + MsgQueueMaxMsgSize];
-            memset(&recvDataMsgBuf, 0, sizeof(recvDataMsgBuf));
-            memcpy(&recvDataMsgBuf, reinterpret_cast < char *>(in), len);
-            m_websocket_queue[dataport_def].push((&recvDataMsgBuf[0]),
-                                                 sizeof(recvDataMsgBuf));
-            pthread_cond_signal(&m_websocket_cond[dataport_def]);
-            if (pthread_mutex_unlock(&m_websocket_mutex[dataport_def]) != 0) {
-                std::cerr << "Failed to unlock mutex" << std::endl;
-            }
-            break;
-        }
-    case LWS_CALLBACK_CLIENT_ESTABLISHED:
-        if (pthread_mutex_lock(&m_websocket_mutex[dataport_def]) != 0) {
-            std::cerr << "Failed to lock mutex" << std::endl;
-        }
-        if (pthread_cond_signal(&m_websocket_cond[dataport_def]) != 0) {
-            std::cerr << "Failed to issue cond_signal" << std::endl;
-        }
-        if (pthread_mutex_unlock(&m_websocket_mutex[dataport_def]) != 0) {
-            std::cerr << "Failed to unlock mutex" << std::endl;
-        }
-        break;
-    default:
-        break;
-    }
-    return 0;
-}
-
-static int callback_ctrl_def(libwebsocket_context * context,
-                             struct libwebsocket *wsi,
-                             enum libwebsocket_callback_reasons reason,
-                             void *user, void *in, size_t len)
-{
-    switch (reason) {
-    case LWS_CALLBACK_CLIENT_RECEIVE:{
-            if (pthread_mutex_lock(&m_websocket_mutex[ctrlport_def]) != 0) {
-                std::cerr << "Failed to lock mutex" << std::endl;
-            }
-            char recvDataMsgBuf[sizeof(KeyDataMsg_t) + MsgQueueMaxMsgSize];
-            memset(&recvDataMsgBuf, 0, sizeof(recvDataMsgBuf));
-            memcpy(&recvDataMsgBuf, reinterpret_cast < char *>(in), len);
-            m_websocket_queue[ctrlport_def].push((&recvDataMsgBuf[0]),
-                                                 sizeof(recvDataMsgBuf));
-            pthread_cond_signal(&m_websocket_cond[ctrlport_def]);
-            if (pthread_mutex_unlock(&m_websocket_mutex[ctrlport_def]) != 0) {
-                std::cerr << "Failed to unlock mutex" << std::endl;
-            }
-            break;
-        }
-    case LWS_CALLBACK_CLIENT_ESTABLISHED:
-        if (pthread_mutex_lock(&m_websocket_mutex[ctrlport_def]) != 0) {
-            std::cerr << "Failed to lock mutex" << std::endl;
-        }
-        if (pthread_cond_signal(&m_websocket_cond[ctrlport_def]) != 0) {
-            std::cerr << "Failed to issue cond_signal" << std::endl;
-        }
-        if (pthread_mutex_unlock(&m_websocket_mutex[ctrlport_def]) != 0) {
-            std::cerr << "Failed to unlock mutex" << std::endl;
-        }
-        break;
-    default:
-        break;
-    }
-    return 0;
-}
-
-static int callback_data_cust(libwebsocket_context * context,
-                              struct libwebsocket *wsi,
-                              enum libwebsocket_callback_reasons reason,
-                              void *user, void *in, size_t len)
-{
-    switch (reason) {
-    case LWS_CALLBACK_CLIENT_RECEIVE:{
-            if (pthread_mutex_lock(&m_websocket_mutex[dataport_cust]) != 0) {
-                std::cerr << "Failed to lock mutex" << std::endl;
-            }
-            char recvDataMsgBuf[sizeof(KeyDataMsg_t) + MsgQueueMaxMsgSize];
-            memset(&recvDataMsgBuf, 0, sizeof(recvDataMsgBuf));
-            memcpy(&recvDataMsgBuf, reinterpret_cast < char *>(in), len);
-            m_websocket_queue[dataport_cust].push((&recvDataMsgBuf[0]),
-                                                  sizeof(recvDataMsgBuf));
-            pthread_cond_signal(&m_websocket_cond[dataport_cust]);
-            if (pthread_mutex_unlock(&m_websocket_mutex[dataport_cust]) != 0) {
-                std::cerr << "Failed to unlock mutex" << std::endl;
-            }
-            break;
-        }
-    case LWS_CALLBACK_CLIENT_ESTABLISHED:
-        if (pthread_mutex_lock(&m_websocket_mutex[dataport_cust]) != 0) {
-            std::cerr << "Failed to lock mutex" << std::endl;
-        }
-        if (pthread_cond_signal(&m_websocket_cond[dataport_cust]) != 0) {
-            std::cerr << "Failed to issue cond_signal" << std::endl;
-        }
-        if (pthread_mutex_unlock(&m_websocket_mutex[dataport_cust]) != 0) {
-            std::cerr << "Failed to unlock mutex" << std::endl;
-        }
-        break;
-    default:
-        break;
-    }
-    return 0;
-}
-
-static int callback_ctrl_cust(libwebsocket_context * context,
-                              struct libwebsocket *wsi,
-                              enum libwebsocket_callback_reasons reason,
-                              void *user, void *in, size_t len)
-{
-    switch (reason) {
-    case LWS_CALLBACK_CLIENT_RECEIVE:{
-            if (pthread_mutex_lock(&m_websocket_mutex[ctrlport_cust]) != 0) {
-                std::cerr << "Failed to lock mutex" << std::endl;
-            }
-            char recvDataMsgBuf[sizeof(KeyDataMsg_t) + MsgQueueMaxMsgSize];
-            memset(&recvDataMsgBuf, 0, sizeof(recvDataMsgBuf));
-            memcpy(&recvDataMsgBuf, reinterpret_cast < char *>(in), len);
-            m_websocket_queue[ctrlport_cust].push((&recvDataMsgBuf[0]),
-                                                  sizeof(recvDataMsgBuf));
-            pthread_cond_signal(&m_websocket_cond[ctrlport_cust]);
-            if (pthread_mutex_unlock(&m_websocket_mutex[ctrlport_cust]) != 0) {
-                std::cerr << "Failed to unlock mutex" << std::endl;
-            }
-            break;
-        }
-    case LWS_CALLBACK_CLIENT_ESTABLISHED:
-        if (pthread_mutex_lock(&m_websocket_mutex[ctrlport_cust]) != 0) {
-            std::cerr << "Failed to lock mutex" << std::endl;
-        }
-        if (pthread_cond_signal(&m_websocket_cond[ctrlport_cust]) != 0) {
-            std::cerr << "Failed to issue cond_signal" << std::endl;
-        }
-        if (pthread_mutex_unlock(&m_websocket_mutex[ctrlport_cust]) != 0) {
-            std::cerr << "Failed to unlock mutex" << std::endl;
-        }
-        break;
-    default:
-        break;
-    }
-    return 0;
-}
-
-/* Modify I/F MessageQueue -> Websocket End */
 
 /**
  * End of File. (CGtCtrl.cpp)

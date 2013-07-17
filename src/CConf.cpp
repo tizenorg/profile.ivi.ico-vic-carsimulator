@@ -12,6 +12,8 @@
  *
  */
 
+#include <unistd.h>
+
 #include "CConf.h"
 
 CConf::CConf()

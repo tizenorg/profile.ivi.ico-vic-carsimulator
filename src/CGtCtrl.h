@@ -39,7 +39,8 @@
 #include <glib-object.h>
 #include <json-glib/json-glib.h>
 
-#include "Websocket.h"
+
+#include "AmbpiComm.h"
 #if 1
 #define MAX_SPEED   199
 #else
@@ -77,7 +78,6 @@ void MakeFdSet(void);
 void FullMakeFdSet(void);
 
 void DaemonTerminate(int SigNo);
-void CloseAllSocket(void);
 
 
 struct VehicleInfoNameList
@@ -279,8 +279,8 @@ class CGtCtrl
 
     VehicleInfo m_stVehicleInfo;
 
-    int m_websocket_port[4];
-    WebsocketIF m_websocket_client[4];
+    int m_ambpicomm_port[4];
+    AmbpiCommIF m_ambpicomm_client[4];
     KeyEventOptMsg_t m_msgOpt;
     KeyDataMsg_t m_msgDat;
 

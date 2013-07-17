@@ -48,7 +48,7 @@ int main(int argc, char **argv)
             bUseGps = true;
             break;
         case 'c':
-            printf("Using WebSocket\n");
+            printf("Using amb plug-in I/F\n");
             comFlg = true;
             break;
         case 't':

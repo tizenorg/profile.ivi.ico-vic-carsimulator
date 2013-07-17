@@ -180,7 +180,7 @@ int CJoyStickEV::ReadData()
 }
 
 /**
- * @breif change input_event value to js_event value
+ * @brief change input_event value to js_event value
  */
 int CJoyStickEV::getJS_EVENT_BUTTON(int& num, int& val,
                                     const struct input_event& s)
@@ -194,7 +194,7 @@ int CJoyStickEV::getJS_EVENT_BUTTON(int& num, int& val,
 }
 
 /**
- * @breif change input_event value to js_event value
+ * @brief change input_event value to js_event value
  */
 int CJoyStickEV::getJS_EVENT_AXIS(int& num, int& val,
                                   const struct input_event& s)
@@ -227,7 +227,7 @@ int CJoyStickEV::getJS_EVENT_AXIS(int& num, int& val,
     return r;
 }
 /**
- * @breif calc value case 1
+ * @brief calc value case 1
  */
 int CJoyStickEV::calc1pm32767(int val, const struct input_absinfo& ai)
 {
@@ -237,7 +237,7 @@ int CJoyStickEV::calc1pm32767(int val, const struct input_absinfo& ai)
     return c;
 }
 /**
- * @breif calc value case 2
+ * @brief calc value case 2
  */
 int CJoyStickEV::calc2pm32767(int val, const struct input_absinfo& ai)
 {
@@ -261,7 +261,7 @@ bool CJoyStickEV::getDeviceName(int fd, char* devNM, size_t sz)
 }
 
 /**
- * @breif device grab
+ * @brief device grab
  */
 bool CJoyStickEV::deviceGrab(int fd)
 {
@@ -276,7 +276,7 @@ bool CJoyStickEV::deviceGrab(int fd)
 }
 
 /**
- * @breif device grab relese
+ * @brief device grab relese
  */
 bool CJoyStickEV::deviceGrabRelese(int fd)
 {

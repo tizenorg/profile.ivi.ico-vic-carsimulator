@@ -26,7 +26,7 @@
 using namespace std;
 
 /**
- * @breif constructor
+ * @brief constructor
  */
 CJoyStick::CJoyStick()
 {

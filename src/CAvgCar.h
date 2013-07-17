@@ -110,7 +110,7 @@ inline int iAverageMachine::getIAvg() const
 }
 
 /**
- * @breif getPrevValue
+ * @brief getPrevValue
  * @return prev sample value
  */
 inline int iAverageMachine::getPrevValue() const
@@ -194,7 +194,7 @@ protected:
 };
 
 /**
- * @breif isOnBrake
+ * @brief isOnBrake
  * @return true:on brake false:no brake
  */
 inline bool CAvgBrake::isOnBrake() const
@@ -203,7 +203,7 @@ inline bool CAvgBrake::isOnBrake() const
 }
 
 /**
- * @breif
+ * @brief
  * @return
  */
 inline int CAvgBrake::getBrakeAvg() const
@@ -410,7 +410,7 @@ private:
 };
 
 /**
- * @breif getRPM
+ * @brief getRPM
  * @return RPM
  */
 inline double CAvgCar::getRPM() const
@@ -491,7 +491,7 @@ inline int CAvgCar::calcAccPedalOpen() const
     return  (int)(x*100.0);
 }
 /**
- * @breif get Tripmeter
+ * @brief get Tripmeter
  * @return trip meter value
  */
 inline double CAvgCar::getTripmeter() const
@@ -499,7 +499,7 @@ inline double CAvgCar::getTripmeter() const
     return m_tripmeter;
 }
 /**
- * @breif tripmeterReset
+ * @brief tripmeterReset
  *        tripmeter reset
  */
 inline void CAvgCar::tripmeterReset()

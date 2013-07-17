@@ -1,3 +1,8 @@
+* Wed Jul 17 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@8f21497
+- 0.1.4-2 release.
+- Change to ico-uxf-utilities from libwebsocket.
+- Bug fix : Compilation errors that occur when updating version of Tizen.
+
 * Thu Jun 06 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/2.0alpha-wayland/20130426.192225@29e931f
 - 0.1.3 release
 - Organize unnecessary files.
