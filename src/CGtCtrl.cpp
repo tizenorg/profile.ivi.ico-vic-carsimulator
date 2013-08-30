@@ -29,7 +29,6 @@ int Daemon_MS;
 int nClient = 0;
 int nDelayedCallback = 0;
 
-
 int ReadPriv = 0;
 int WritePriv = 0;
 
@@ -69,6 +68,7 @@ const char* protocolsName[protocols_sz] = {
 
 CGtCtrl::CGtCtrl()
 {
+    m_strConfPath = "/usr/bin/CarSimDaemon.conf";
     // TODO Auto-generated constructor stub
     signal(SIGINT, CGtCtrl::signal_handler);
     signal(SIGQUIT, CGtCtrl::signal_handler);
@@ -78,12 +78,6 @@ CGtCtrl::CGtCtrl()
 
     m_bUseGps = false;
     myJS = NULL;
-    if (true == gbDevJs) {
-        myJS = new CJoyStick;
-    }
-    else {
-        myJS = new CJoyStickEV;
-    }
 }
 
 CGtCtrl::~CGtCtrl()
@@ -132,7 +126,48 @@ bool CGtCtrl::Initialize()
 
     m_bFirstOpen = true;
 
-    myConf.LoadConfig();
+    if (true == gbDevJs) {
+        myJS = new CJoyStick;
+        int nRet = myJS->Open();
+        if (nRet < 0) {
+            printf("JoyStick open error\n");
+            return false;
+        }
+    }
+    else {
+        int i = 0;
+        do {
+            switch (i) {
+            case 0 :
+                printf("Load class G27\n");
+                myJS = new CJoyStickG27;
+                m_strConfPath = g_ConfPathG27;
+                break;
+            case 1 :
+                printf("Load class G25\n");
+                myJS = new CJoyStickG25;
+                m_strConfPath = g_ConfPathG25;
+                break;
+            case 2 :
+                printf("Load class EV\n");
+                myJS = new CJoyStickEV;
+                m_strConfPath = g_ConfPathG27;
+                break;
+            default :
+                break;
+            }
+            int nRet = myJS->Open();
+            if (nRet > 0) {
+                break;
+            }
+            delete myJS;
+        } while ((++i) < g_JoyStickTypeNum);
+        if (myJS == NULL) {
+            return false;
+        }
+    }
+
+    myConf.LoadConfig(m_strConfPath.c_str());
 
     m_viList.init();
 
@@ -142,12 +177,6 @@ bool CGtCtrl::Initialize()
     }
 
     m_sendMsgInfo.clear();
-
-    int nRet = myJS->Open();
-    if (nRet < 0) {
-        printf("JoyStick open error\n");
-        return false;
-    }
 
     char uri[128];
     for (int i = 0; i < protocols_sz; i++) {
@@ -171,7 +200,9 @@ bool CGtCtrl::Terminate()
 {
     bool b = true;
 
-    myJS->Close();
+    if (myJS != NULL) {
+        myJS->Close();
+    }
     return b;
 }
 
@@ -239,39 +270,156 @@ void CGtCtrl::Run()
             }
 
             if (number == myConf.m_nAccel) {
-                if (0 == value) {
-                    pmCar.chgThrottle(32767);
-                    pmCar.chgBrake(32767);
-                }
-                else if (0 < value) {
-                    pmCar.chgThrottle(32767);
-                    pmCar.chgBrake((value - 16384) * -2);
+                //printf("Accel[%d]\n", value);
+                if (gbDevJs) {
+                    if (0 == value) {
+                        pmCar.chgThrottle(32767);
+                        pmCar.chgBrake(32767);
+                    }
+                    else if (0 < value) {
+                        pmCar.chgThrottle(32767);
+                        pmCar.chgBrake((value - 16384) * -2);
+                    }
+                    else {
+                        pmCar.chgThrottle((abs(value) - 16384) * -2);
+                        pmCar.chgBrake(32767);
+                    }
                 }
                 else {
-                    pmCar.chgThrottle((abs(value) - 16384) * -2);
+                    pmCar.chgThrottle((65535 - value) / 1.1 + 32767);
                     pmCar.chgBrake(32767);
                 }
+            }
+
+            if (number == myConf.m_nBrake) {
+                //printf("Brake[%d]\n", value);
+                pmCar.chgThrottle(32767);
+                pmCar.chgBrake((65535 - value) / 64 + 32767);
             }
             break;
         case JS_EVENT_BUTTON:
-            /**
-             * Gear Change SHIFT UP
-             */
-            if (number == myConf.m_nShiftU) {
-                if (value != 0) {
-                    pmCar.setShiftUp();
-                    m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
-                    shiftpos = pmCar.getValue();
+            if (myConf.m_sDeviceName == D_DEV_NAME_G25) {
+                /**
+                 * Gear Change SHIFT UP
+                 */
+                if (number == myConf.m_nShiftU) {
+                    //printf("Shift Up[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftUp();
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+                /**
+                 * Gear Change SHIFT DOWN
+                 */
+                if (number == myConf.m_nShiftD) {
+                    //printf("Shift Down[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftDown();
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
                 }
             }
-            /**
-             * Gear Change SHIFT DOWN
-             */
-            if (number == myConf.m_nShiftD) {
-                if (value != 0) {
-                    pmCar.setShiftDown();
-                    m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
-                    shiftpos = pmCar.getValue();
+
+            else if (myConf.m_sDeviceName == D_DEV_NAME_G27) {
+                if (number == myConf.m_nShift1) {
+                    //printf("Shift 1[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_FIRST);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShift2) {
+                    //printf("Shift 2[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_SECOND);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShift3) {
+                    //printf("Shift 3[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_THIRD);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShift4) {
+                    //printf("Shift 4[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_FOURTH);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShift5) {
+                    //printf("Shift 5[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_FIFTH);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShift6) {
+                    //printf("Shift 6[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_MT_SIXTH);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                }
+
+                if (number == myConf.m_nShiftR) {
+                    //printf("Shift R[%d]\n",value);
+                    if (value != 0) {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_REVERSE);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
+                    else {
+                        pmCar.setShiftMT(CAvgGear::E_SHIFT_NEUTRAL);
+                        m_stVehicleInfo.nShiftPos = pmCar.getSelectGear();
+                        shiftpos = pmCar.getValue();
+                    }
                 }
             }
             /**
@@ -379,6 +527,12 @@ void CGtCtrl::Run()
             int data[ShiftSz];                                                                    
             int val = pmCar.getValue();
             data[0] = pmCar.getSelectGear();
+            if (data[0] > 10) {
+                data[0] = data[0] - 10 + 4;
+                if (data[0] >= 8) {
+                    data[0] = 4;
+                }
+            }
             data[1] = pmCar.getValue();
             data[2] = pmCar.getMode();
             SendVehicleInfo(dataport_def, sSHIFT, &data[0], ShiftSz);
@@ -985,7 +1139,7 @@ bool CGtCtrl::LoadConfigJson(const char *fname)
         return false;
     }
 
-    g_type_init();
+    //g_type_init();
     printf("conf=%s\nvehicleinfo conf=%s\n", fname, confpath);
 
     parser = json_parser_new();
@@ -1061,7 +1215,7 @@ bool CGtCtrl::LoadConfigAMBJson(const char *fname, char *jsonfname, int size)
     JsonReader *rd = NULL;
 
     memset(jsonfname, 0x00, size);
-    g_type_init();
+    //g_type_init();
 
     ps = json_parser_new();
     GError *error = NULL;

@@ -27,11 +27,13 @@ CConf::~CConf()
     // TODO Auto-generated destructor stub
 }
 
-void CConf::LoadConfig()
+void CConf::LoadConfig(const char*filePath)
 {
-    CConf::GetModulePath(m_strConfPath, sizeof(m_strConfPath));
+    //CConf::GetModulePath(m_strConfPath, sizeof(m_strConfPath));
 
-    strncat(m_strConfPath, "/CarSim_Daemon.conf", sizeof(m_strConfPath));
+    //strncat(m_strConfPath, filePath, sizeof(m_strConfPath));
+    memset(m_strConfPath, 0, sizeof(m_strConfPath));
+    strcpy(m_strConfPath, filePath);
     printf("ConfPath:%s\n", m_strConfPath);
 
     m_nWinkR = CConf::GetConfig(m_strConfPath, "WINKER_RIGHT", "NUMBER", 4);
@@ -39,6 +41,13 @@ void CConf::LoadConfig()
 
     m_nShiftU = CConf::GetConfig(m_strConfPath, "SHIFT_UP", "NUMBER", 11);
     m_nShiftD = CConf::GetConfig(m_strConfPath, "SHIFT_DOWN", "NUMBER", 10);
+    m_nShift1 = CConf::GetConfig(m_strConfPath, "SHIFT_1", "NUMBER", 300);
+    m_nShift2 = CConf::GetConfig(m_strConfPath, "SHIFT_2", "NUMBER", 301);
+    m_nShift3 = CConf::GetConfig(m_strConfPath, "SHIFT_3", "NUMBER", 302);
+    m_nShift4 = CConf::GetConfig(m_strConfPath, "SHIFT_4", "NUMBER", 303);
+    m_nShift5 = CConf::GetConfig(m_strConfPath, "SHIFT_5", "NUMBER", 704);
+    m_nShift6 = CConf::GetConfig(m_strConfPath, "SHIFT_6", "NUMBER", 705);
+    m_nShiftR = CConf::GetConfig(m_strConfPath, "SHIFT_R", "NUMBER", 710);
     m_nSteering = CConf::GetConfig(m_strConfPath, "STEERING", "NUMBER", 0);
     m_nAccel = CConf::GetConfig(m_strConfPath, "ACCEL", "NUMBER", 1);
     m_nBrake = CConf::GetConfig(m_strConfPath, "BRAKE", "NUMBER", 2);
@@ -47,9 +56,12 @@ void CConf::LoadConfig()
         CConf::GetConfig(m_strConfPath, "LASTPOSITION", "LAT", 35.717931);
     m_fLng =
         CConf::GetConfig(m_strConfPath, "LASTPOSITION", "LNG", 139.736518);
+    char devname[64];
+    memset(devname, 0, sizeof(devname));
+    CConf::GetConfig(m_strConfPath, "DEVICE", "NAME", "Driving Force GT", devname, sizeof(devname));
+    m_sDeviceName = std::string(devname);
 
-
-    printf("Configuration:\n");
+    printf("Configuration[%s]:\n",m_sDeviceName.c_str());
     printf("  WINKER(R) button:%d\tWINKER(L) button:%d\n", m_nWinkR,
            m_nWinkL);
     printf("  SHIFT(U) button:%d\tSHIFT(D) button:%d\n", m_nShiftU,

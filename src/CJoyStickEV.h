@@ -21,6 +21,8 @@
 #include <string.h>
 #include <poll.h>
 
+#include "CJoyStick.h"
+
 #define D_DEV_NAME_PARTS_EV "event"
 
 class CJoyStickEV : public CJoyStick
@@ -43,13 +45,16 @@ class CJoyStickEV : public CJoyStick
     enum {
         E_ABSX = 0, /* ABS_X */
         E_ABSY,     /* ABS_Y */
+        E_ABSZ,
+        E_ABSRZ,
         E_ABSHAT0X, /* ABS_HAT0X */
         E_ABSHAT0Y, /* ABS_HAT0Y */
         E_ABSMAX    /* */
     };
-  private:
     struct input_absinfo m_absInf[E_ABSMAX];
     bool m_grab;
+    std::string m_devName;
+  private:
 };
 
 #endif /* CJOYSTICKEV_H_ */

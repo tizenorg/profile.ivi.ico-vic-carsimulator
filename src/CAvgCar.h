@@ -266,7 +266,13 @@ class CAvgGear
         E_SHIFT_DRIVE = 4,   // 4=N
         E_SHIFT_FIRST,       // 5=L
         E_SHIFT_SECOND,      // 6=2
-        E_SHIFT_THIRD        // 7=oem
+        E_SHIFT_THIRD,        // 7=oem
+        E_SHIFT_MT_FIRST = 11,
+        E_SHIFT_MT_SECOND,
+        E_SHIFT_MT_THIRD,
+        E_SHIFT_MT_FOURTH,
+        E_SHIFT_MT_FIFTH,
+        E_SHIFT_MT_SIXTH,
     };
 
             CAvgGear();
@@ -282,8 +288,15 @@ class CAvgGear
     bool    isReverse() const;
     bool    isNeutral() const;
     bool    isParking() const;
+
+    void    setShiftMT(E_AT_GEAR tm);
+
+    bool    isReverseLastTime() const;
+    void    reset_old();
+
   private:
     E_AT_GEAR m_transmission;
+    E_AT_GEAR m_transmissionOLD;
     int       m_transmissionValue;
 };
 
@@ -293,6 +306,7 @@ class CAvgGear
  */
 inline void CAvgGear::chgGear(E_AT_GEAR tm)
 {
+    m_transmissionOLD = m_transmission;
     m_transmission = tm;
 }
 
@@ -357,6 +371,27 @@ inline int CAvgGear::getValue() const
 inline int CAvgGear::getMode() const
 {
     return D_SHIFT_MODE_NORMAL;
+}
+
+/**
+ * @brief Reverse gear last time check
+ * @return true / false
+ */
+inline bool CAvgGear::isReverseLastTime() const
+{
+    if (E_SHIFT_REVERSE == m_transmissionOLD) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief reset_old
+ * @return transmission old value clear
+ */
+inline void CAvgGear::reset_old()
+{
+    m_transmissionOLD = m_transmission;
 }
 
 /******************************************

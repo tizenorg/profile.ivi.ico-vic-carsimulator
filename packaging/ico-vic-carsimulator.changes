@@ -1,3 +1,8 @@
+* Fri Aug 30 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@cbaa0e0
+- release 0.9.01
+-- Support G27 Racing Wheel. (Current Support device G27 Racing Wheel and Driving Force GT)
+-- Support systemctl.
+
 * Wed Jul 17 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@8f21497
 - 0.1.4-2 release.
 - Change to ico-uxf-utilities from libwebsocket.

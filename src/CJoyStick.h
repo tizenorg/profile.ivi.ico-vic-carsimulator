@@ -26,7 +26,8 @@
 
 #define D_DEV_DIR_PATH      "/dev/input/"
 #define D_DEV_NAME_PARTS_JS "js"
-#define D_DEV_NAME          "Driving Force GT"
+#define D_DEV_NAME_G25      "Driving Force GT"
+#define D_DEV_NAME_G27      "G27 Racing Wheel"
 
 class CJoyStick
 {

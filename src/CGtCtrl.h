@@ -20,6 +20,8 @@
 #include "CConf.h"
 #include "CJoyStick.h"
 #include "CJoyStickEV.h"
+#include "CJoyStickG25.h"
+#include "CJoyStickG27.h"
 
 #include <pthread.h>
 
@@ -48,6 +50,9 @@
 #endif
 
 const useconds_t g_sleeptime = 10000; // = 10milli sec = 0.01 sec
+const int g_JoyStickTypeNum = 3;
+const std::string g_ConfPathG25 = "/etc/carsim/G25.conf";
+const std::string g_ConfPathG27 = "/etc/carsim/G27.conf";
 #define D_RUNLOOP_INTERVAL_COUNT  5
 #define D_RUNLOOP_INTERVAL_COUNT2 50
 
@@ -276,6 +281,8 @@ class CGtCtrl
     int m_nJoyStickID;
 
     bool m_bFirstOpen;
+
+    std::string m_strConfPath;
 
     VehicleInfo m_stVehicleInfo;
 

@@ -47,7 +47,7 @@ class CConf
 
     static void GetModulePath(char *buf, int bufsize);
 
-    void LoadConfig();
+    void LoadConfig(const char*filePath);
 
 
     int m_nHazard;
@@ -60,8 +60,16 @@ class CConf
     int m_nSteering;
     int m_nAccel;
     int m_nBrake;
+    int m_nShift1;
+    int m_nShift2;
+    int m_nShift3;
+    int m_nShift4;
+    int m_nShift5;
+    int m_nShift6;
+    int m_nShiftR;
     double m_fLng;
     double m_fLat;
+    std::string m_sDeviceName;
 
 };
 

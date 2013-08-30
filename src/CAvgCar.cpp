@@ -333,6 +333,7 @@ double CAvgBrake::getSpeed(double sourceSpeed)
 CAvgGear::CAvgGear()
 {
     m_transmission = E_SHIFT_PARKING;
+    m_transmissionOLD = m_transmission;
     m_transmissionValue = D_SHIFT_VALUE_PARKING;
 }
 
@@ -416,6 +417,24 @@ double CAvgGear::getGearRatio(double speed, bool bDown) const
     case E_SHIFT_NEUTRAL:
         gr = 0.0l;
         break;
+    case E_SHIFT_MT_FIRST:
+        gr = gr1;
+        break;
+    case E_SHIFT_MT_SECOND:
+        gr = grD1;
+        break;
+    case E_SHIFT_MT_THIRD:
+        gr = grD2;
+        break;
+    case E_SHIFT_MT_FOURTH:
+        gr = grD3;
+        break;
+    case E_SHIFT_MT_FIFTH:
+        gr = grD4;
+        break;
+    case E_SHIFT_MT_SIXTH:
+        gr = grD5;
+        break;
     default:
         gr = 0.0l;
         break;
@@ -430,30 +449,37 @@ void CAvgGear::setShiftDown()
 {
     switch (m_transmission) {
     case E_SHIFT_PARKING:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_REVERSE; // PARKING -> REVERSE
         m_transmissionValue = D_SHIFT_VALUE_REVERSE;
         break;
     case E_SHIFT_REVERSE:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_NEUTRAL; // REVERSE -> NEUTRAL
         m_transmissionValue = D_SHIFT_VALUE_NEUTRAL;
         break;
     case E_SHIFT_NEUTRAL:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_DRIVE;   // NEUTRAL -> DRIVE
         m_transmissionValue = D_SHIFT_VALUE_DRIVE;
         break;
     case E_SHIFT_DRIVE:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_THIRD;   // DRIVE   -> THIRD
         m_transmissionValue = D_SHIFT_VALUE_THIRD;
         break;
     case E_SHIFT_THIRD:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_SECOND;  // THIRD   -> SECOND
         m_transmissionValue = D_SHIFT_VALUE_SECOND;
         break;
     case E_SHIFT_SECOND:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_FIRST;   // SECOND  -> FIRST
         m_transmissionValue = D_SHIFT_VALUE_FIRST;
         break;
     case E_SHIFT_FIRST:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_FIRST;   // NO CHANGE
         m_transmissionValue = D_SHIFT_VALUE_FIRST;
         break;
@@ -467,32 +493,86 @@ void CAvgGear::setShiftUp()
 {
     switch (m_transmission) {
     case E_SHIFT_FIRST:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_SECOND;  // FIRST   -> SECOND
         m_transmissionValue = D_SHIFT_VALUE_SECOND;
         break;
     case E_SHIFT_SECOND:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_THIRD;   // SECOND  -> THIRD
         m_transmissionValue = D_SHIFT_VALUE_THIRD;
         break;
     case E_SHIFT_THIRD:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_DRIVE;   // THIRD -> DRIVE
         m_transmissionValue = D_SHIFT_VALUE_DRIVE;
         break;
     case E_SHIFT_DRIVE:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_NEUTRAL; // DRIVE -> NEUTRAL
         m_transmissionValue = D_SHIFT_VALUE_NEUTRAL;
         break;
     case E_SHIFT_NEUTRAL:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_REVERSE; // NEUTRAL -> REVERSE
         m_transmissionValue = D_SHIFT_VALUE_REVERSE;
         break;
     case E_SHIFT_REVERSE:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_PARKING; // REVERSE  -> PARKING
         m_transmissionValue = D_SHIFT_VALUE_PARKING;
         break;
     case E_SHIFT_PARKING:
+        m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_PARKING; // NO CHANGE
         m_transmissionValue = D_SHIFT_VALUE_PARKING;
+        break;
+    }
+}
+
+void CAvgGear::setShiftMT(E_AT_GEAR tm) {
+    switch(tm) {
+    case E_SHIFT_MT_FIRST :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_FIRST;
+        m_transmissionValue = D_SHIFT_VALUE_FIRST;
+        break;
+    case E_SHIFT_MT_SECOND :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_SECOND;
+        m_transmissionValue = D_SHIFT_VALUE_SECOND;
+        break;
+    case E_SHIFT_MT_THIRD :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_THIRD;
+        m_transmissionValue = D_SHIFT_VALUE_THIRD;
+        break;
+    case E_SHIFT_MT_FOURTH :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_FOURTH;
+        m_transmissionValue = D_SHIFT_VALUE_DRIVE;
+        break;
+    case E_SHIFT_MT_FIFTH :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_FIFTH;
+        m_transmissionValue = D_SHIFT_VALUE_DRIVE;
+        break;
+    case E_SHIFT_MT_SIXTH :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_MT_SIXTH;
+        m_transmissionValue = D_SHIFT_VALUE_DRIVE;
+        break;
+    case E_SHIFT_REVERSE :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_REVERSE;
+        m_transmissionValue = D_SHIFT_VALUE_REVERSE;
+        break;
+    case E_SHIFT_NEUTRAL :
+        m_transmissionOLD = m_transmission;
+        m_transmission = E_SHIFT_NEUTRAL;
+        m_transmissionValue = D_SHIFT_VALUE_NEUTRAL;
+        break;
+    default :
         break;
     }
 }
@@ -619,10 +699,17 @@ void CAvgCar::calc()
             double x = 0 - m_currentRunMeter;
             m_currentRunMeter = x;
         }
+        else if (true == isNeutral()) {
+            if (true == isReverseLastTime()) {
+                double x = 0 - m_currentRunMeter;
+                m_currentRunMeter = x;
+            }
+        }
         m_tripmeter += m_currentRunMeter;
         m_odometer += m_currentRunMeter;
     }
     else {
+        reset_old();
         m_currentRunMeter = 0.0l;
     }
 }

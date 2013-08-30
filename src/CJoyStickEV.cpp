@@ -30,6 +30,7 @@ CJoyStickEV::CJoyStickEV()
     // TODO Auto-generated constructor stub
     memset(m_absInf, 0, sizeof(m_absInf));
     m_grab = false;
+    m_devName = std::string(D_DEV_NAME_G27);
 }
 
 CJoyStickEV::~CJoyStickEV()
@@ -45,44 +46,27 @@ int CJoyStickEV::Open()
 {
     string dirpath(D_DEV_DIR_PATH);
     string nameparts(D_DEV_NAME_PARTS_EV);
-    string devName(D_DEV_NAME);
     string devPath;
     /**
      * get device file
      */
-    int rfd = deviceOpen(dirpath, nameparts, devName, devPath);
+    printf("Open Device Name is %s\n", m_devName.c_str());
+    int rfd = deviceOpen(dirpath, nameparts, m_devName, devPath);
     if (0 > rfd) {
+        printf("Can't open device.\n");
         return rfd;
     }
     m_nJoyStickID = rfd;
     /**
      * set grab
      */
+    printf("Check Grab is %s(%d)\n", m_devName.c_str(), rfd);
     if (false == deviceGrab(rfd)) {
+        printf("Can't get grab.\n");
         Close();
         return -1;
     }
 
-    if (0 > ioctl(rfd, EVIOCGABS(ABS_X), &m_absInf[E_ABSX])) {
-        cerr << "ioctl(EVIOCGABS(ABS_X)) get error" << endl;
-        m_absInf[E_ABSX].minimum = 0;
-        m_absInf[E_ABSX].maximum = 1023;
-    }
-    if (0 > ioctl(rfd, EVIOCGABS(ABS_Y), &m_absInf[E_ABSY])) {
-        cerr << "ioctl(EVIOCGABS(ABS_Y)) get error" << endl;
-        m_absInf[E_ABSY].minimum = 0;
-        m_absInf[E_ABSY].maximum = 255;
-    }
-    if (0 > ioctl(rfd, EVIOCGABS(ABS_HAT0X), &m_absInf[E_ABSHAT0X])) {
-        cerr << "ioctl(EVIOCGABS(ABS_HAT0X)) get error" << endl;
-        m_absInf[E_ABSHAT0X].minimum = -1;
-        m_absInf[E_ABSHAT0X].maximum = 1;
-    }
-    if (0 > ioctl(rfd, EVIOCGABS(ABS_HAT0Y), &m_absInf[E_ABSHAT0Y])) {
-        cerr << "ioctl(EVIOCGABS(ABS_HAT0Y)) get error" << endl;
-        m_absInf[E_ABSHAT0Y].minimum = -1;
-        m_absInf[E_ABSHAT0Y].maximum = 1;
-    }
     fds.fd = m_nJoyStickID;
     return m_nJoyStickID;
 }
@@ -185,12 +169,17 @@ int CJoyStickEV::ReadData()
 int CJoyStickEV::getJS_EVENT_BUTTON(int& num, int& val,
                                     const struct input_event& s)
 {
+/*
     if ((BTN_JOYSTICK <= s.code) && (s.code <= BTN_GEAR_UP)) {
         num = s.code - BTN_JOYSTICK;
         val = s.value;
         return JS_EVENT_BUTTON;
     }
     return -1;
+*/
+    num = s.code;
+    val = s.value;
+    return JS_EVENT_BUTTON;
 }
 
 /**
@@ -204,22 +193,32 @@ int CJoyStickEV::getJS_EVENT_AXIS(int& num, int& val,
     case ABS_X:
         r = JS_EVENT_AXIS;
         num = 0;
-        val = calc1pm32767((int)s.value, m_absInf[E_ABSX]);
+        val = calc2pm32767((int)s.value, m_absInf[E_ABSX]);
         break;
     case ABS_Y:
         r = JS_EVENT_AXIS;
         num = 1;
-        val = calc1pm32767((int)s.value, m_absInf[E_ABSY]);
+        val = calc2pm32767((int)s.value, m_absInf[E_ABSY]);
+        break;
+    case ABS_Z:
+        r = JS_EVENT_AXIS;
+        num = 2;
+        val = calc2pm32767((int)s.value, m_absInf[E_ABSZ]);
+        break;
+    case ABS_RZ:
+        r = JS_EVENT_AXIS;
+        num = 5;
+        val = calc2pm32767((int)s.value, m_absInf[E_ABSRZ]);
         break;
     case ABS_HAT0X:
         r = JS_EVENT_AXIS;
-        num = 2;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSHAT0X]);
+        num = 16;
+        val = (int)s.value;
         break;
     case ABS_HAT0Y:
         r = JS_EVENT_AXIS;
-        num = 3;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSHAT0Y]);
+        num = 17;
+        val = (int)s.value;
         break;
     defaulr:
         break;
