@@ -41,7 +41,9 @@ class CJoyStickEV : public CJoyStick
     int getJS_EVENT_BUTTON(int& num, int& val, const struct input_event& s);
     int getJS_EVENT_AXIS(int& num, int& val, const struct input_event& s);
     int calc1pm32767(int val, const struct input_absinfo& ai);
-    int calc2pm32767(int val, const struct input_absinfo& ai);
+    int calc2p65535(int val, const struct input_absinfo& ai);
+    int calc3p32767(int val, const struct input_absinfo& ai);
+    int calc3p32767Reverse(int val, const struct input_absinfo& ai);
     enum {
         E_ABSX = 0, /* ABS_X */
         E_ABSY,     /* ABS_Y */

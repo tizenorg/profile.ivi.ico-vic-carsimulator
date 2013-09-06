@@ -52,6 +52,9 @@ void CConf::LoadConfig(const char*filePath)
     m_nAccel = CConf::GetConfig(m_strConfPath, "ACCEL", "NUMBER", 1);
     m_nBrake = CConf::GetConfig(m_strConfPath, "BRAKE", "NUMBER", 2);
 
+    m_nHeadLight =
+        CConf::GetConfig(m_strConfPath, "HEAD_LIGHT", "NUMBER", 292);
+
     m_fLat =
         CConf::GetConfig(m_strConfPath, "LASTPOSITION", "LAT", 35.717931);
     m_fLng =

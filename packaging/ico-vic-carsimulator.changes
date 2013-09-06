@@ -1,3 +1,9 @@
+* Fri Sep 06 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> v0.1.3-1@5890760
+- 0.9.02 release
+-- Corresponding to Tizen IVI 3.0 OS
+-- Create an event definition file of G25 and G27 steering wheel
+-- Set to head-light state operation to the right paddle shifter
+
 * Fri Aug 30 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@cbaa0e0
 - release 0.9.01
 -- Support G27 Racing Wheel. (Current Support device G27 Racing Wheel and Driving Force GT)
