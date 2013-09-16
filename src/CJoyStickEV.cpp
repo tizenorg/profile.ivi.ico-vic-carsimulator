@@ -8,6 +8,17 @@
  */
 /**
  * @file    CJoyStickEV.h
+ *
+ * Note:
+ * processing in the value of the joystick-event in Tizen IVI 2.0
+ *  joystick-event
+ *    event-type is used JS_EVENT_BUTTON and JS_EVENT_AXIS 
+ *    axis/button number value is determine in configuration file
+ *      G27.conf G25.conf
+ *    event-value memo
+ *      Steering value: -32767(Right) <-> 32767(Left)
+ *      Accel value:0(full throttle) <-> 32767(free throttle)
+ *      Brake value:0(full throttle) <-> 32767(free throttle)
  */
 #include <unistd.h>
 #include <iostream>
@@ -23,6 +34,7 @@
 #include <linux/input.h>
 #include "CJoyStick.h"
 #include "CJoyStickEV.h"
+#include "CConf.h"
 using namespace std;
 
 CJoyStickEV::CJoyStickEV()
@@ -191,33 +203,35 @@ int CJoyStickEV::getJS_EVENT_AXIS(int& num, int& val,
     int r = -1;
     switch (s.code) {
     case ABS_X:
+        // Convert value Steering
+        //    0 to 16353 -> -32766 to 32767
         r = JS_EVENT_AXIS;
-        num = 0;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSX]);
+        num = (int)s.code;
+        val = calc1pm32767((int)s.value, m_absInf[E_ABSX]);
         break;
     case ABS_Y:
         r = JS_EVENT_AXIS;
-        num = 1;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSY]);
+        num = (int)s.code;
+        val = calc1pm32767((int)s.value, m_absInf[E_ABSY]);
         break;
     case ABS_Z:
         r = JS_EVENT_AXIS;
-        num = 2;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSZ]);
+        num = (int)s.code;
+        val = calc3p32767Reverse((int)s.value, m_absInf[E_ABSZ]);
         break;
     case ABS_RZ:
         r = JS_EVENT_AXIS;
-        num = 5;
-        val = calc2pm32767((int)s.value, m_absInf[E_ABSRZ]);
+        num = (int)s.code;
+        val = calc3p32767Reverse((int)s.value, m_absInf[E_ABSRZ]);
         break;
     case ABS_HAT0X:
         r = JS_EVENT_AXIS;
-        num = 16;
+        num = (int)s.code;
         val = (int)s.value;
         break;
     case ABS_HAT0Y:
         r = JS_EVENT_AXIS;
-        num = 17;
+        num = (int)s.code;
         val = (int)s.value;
         break;
     defaulr:
@@ -227,6 +241,7 @@ int CJoyStickEV::getJS_EVENT_AXIS(int& num, int& val,
 }
 /**
  * @brief calc value case 1
+ *        change to -32767 <-> 32767
  */
 int CJoyStickEV::calc1pm32767(int val, const struct input_absinfo& ai)
 {
@@ -235,16 +250,43 @@ int CJoyStickEV::calc1pm32767(int val, const struct input_absinfo& ai)
     int c = ((int) (b * 65534)) - 32767;
     return c;
 }
+
 /**
  * @brief calc value case 2
+ *        change to 0 <-> 65534
  */
-int CJoyStickEV::calc2pm32767(int val, const struct input_absinfo& ai)
+int CJoyStickEV::calc2p65535(int val, const struct input_absinfo& ai)
 {
     int a = ai.maximum - ai.minimum;
     double b = (double)val / (double)a;
     int c = (int) (b * 65534);
     return c;
 }
+
+/**
+ * @brief calc value case 3
+ *        change to 0 <-> 32767
+ */
+int CJoyStickEV::calc3p32767(int val, const struct input_absinfo& ai)
+{
+    int a = ai.maximum - ai.minimum;
+    double b = (double)val / (double)a;
+    int c = (int) (b * 32767);
+    return c;
+}
+
+/**
+ * @brief calc value case 3
+ *        change to 32767 <-> 0
+ */
+int CJoyStickEV::calc3p32767Reverse(int val, const struct input_absinfo& ai)
+{
+    int a = ai.maximum - ai.minimum;
+    double b = (double)val / (double)a;
+    int c = abs(((int) (b * 32767)) - 32767);
+    return c;
+}
+
 /**
  * get device name
  */

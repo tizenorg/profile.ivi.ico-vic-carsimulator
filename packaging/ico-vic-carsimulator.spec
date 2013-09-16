@@ -1,6 +1,6 @@
 Name:       ico-vic-carsimulator
 Summary:    CarSimulator
-Version:    0.9.0
+Version:    0.9.03
 Release:    1.1
 Group:      System Environment/Daemons
 License:    Apache 2.0
@@ -13,10 +13,8 @@ Requires:       ico-uxf-utilities
 BuildRequires:  make
 BuildRequires:  automake
 BuildRequires:  boost-devel
-#BuildRequires:  libwebsockets-devel
 BuildRequires:  glib2-devel
 BuildRequires:  json-glib-devel
-#BuildRequires:  ico-uxf-utilities
 BuildRequires:  ico-uxf-utilities-devel
 
 %description 
@@ -39,7 +37,6 @@ rm -rf %{buildroot}
 %define carsim_conf /usr/bin/
 mkdir -p %{buildroot}/etc/carsim/
 mkdir -p %{buildroot}/usr/lib/systemd/system/
-#install -m 0644 src/CarSim_Daemon.conf %{buildroot}%{carsim_conf}
 install -m 0644 G25.conf %{buildroot}/etc/carsim/
 install -m 0644 G27.conf %{buildroot}/etc/carsim/
 install -m 0644 carsim.service %{buildroot}/usr/lib/systemd/system/
@@ -52,4 +49,3 @@ install -m 0644 carsim.service %{buildroot}/usr/lib/systemd/system/
 %{_bindir}/*
 /etc/carsim/*
 /usr/lib/systemd/system/carsim.service
-#%{carsim_conf}/CarSim_Daemon.conf

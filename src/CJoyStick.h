@@ -55,7 +55,6 @@ class CJoyStick
                     std::vector<std::string>& filesList) const;
     virtual bool getDeviceName(int fd, char* devNM, size_t sz);
 
-
 protected:
     char m_strJoyStick[64];
     int m_nJoyStickID;

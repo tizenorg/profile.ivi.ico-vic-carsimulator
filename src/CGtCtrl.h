@@ -214,6 +214,7 @@ struct VehicleInfo
     double dVelocity;
     int nAccel;
     int nBrake;
+    bool bHeadLight; // HEAD LIGHT ON(true)/OFF(false) status
 };
 
 enum SHIFT_POS

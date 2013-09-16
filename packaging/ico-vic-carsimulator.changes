@@ -1,3 +1,12 @@
+* Mon Sep 16 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@b57c2a9
+- 0.9.03 release.
+-- Retry to Websocket connection failure.
+
+- 0.9.02 release
+-- Corresponding to Tizen IVI 3.0 OS
+-- Create an event definition file of G25 and G27 steering wheel
+-- Set to head-light state operation to the right paddle shifter
+
 * Fri Aug 30 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@cbaa0e0
 - release 0.9.01
 -- Support G27 Racing Wheel. (Current Support device G27 Racing Wheel and Driving Force GT)

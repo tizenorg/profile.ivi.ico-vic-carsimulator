@@ -19,6 +19,7 @@
 using namespace std;
 
 static vector<AmbpiCommIF*> _commList;
+const int RECONNECT_WS = 5;
 
 bool _addAmbCommIFList(AmbpiCommIF* comm);
 void _eraseAmbCommIFList(const AmbpiCommIF* comm);
@@ -225,11 +226,15 @@ bool AmbpiCommIF::init(const char* uri, const char* protocolName)
     }
     m_uri = uri;
     m_pNm = protocolName;
-    m_context = ico_uws_create_context(uri, protocolName);
-    if (NULL == m_context) {
+	int loopcount = 0;
+	do {
+		m_context = ico_uws_create_context(uri, protocolName);
+		if (NULL != m_context) {
+			break;
+		}
         cerr << m_pNm << ":Failed to create context." << endl;
-        return false;
-    }
+		usleep (500 * 1000);
+	} while (m_context == NULL && ++loopcount < RECONNECT_WS);
     int r = ico_uws_set_event_cb(m_context, _icoUwsCallback, (void*)this);
     if (ICO_UWS_ERR_NONE != r) {
         cerr << m_pNm << ":Failed to callback entry(" << r << ")." << endl;

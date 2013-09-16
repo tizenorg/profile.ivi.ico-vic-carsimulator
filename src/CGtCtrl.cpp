@@ -123,6 +123,7 @@ bool CGtCtrl::Initialize()
     m_stVehicleInfo.nDirection = 0;
     m_stVehicleInfo.dVelocity = 0.0;
     m_stVehicleInfo.nAccel = 0;
+    m_stVehicleInfo.bHeadLight = false; // HEAD LIGHT OFF(false)
 
     m_bFirstOpen = true;
 
@@ -237,7 +238,7 @@ void CGtCtrl::Run()
     int nAccPedalOpen = -1;
     int nSpeed = -1;
     CAvgCar pmCar(g_RPM_SAMPLE_SPACE_SIZE, g_SPEED_SAMPLE_SPACE_SIZE,
-                        g_BREAKE_SAMPLE_SPACE_SIZE);
+                  g_BREAKE_SAMPLE_SPACE_SIZE);
     pmCar.chgGear(CAvgGear::E_SHIFT_PARKING);
     /**
      * DIRECTION
@@ -268,33 +269,21 @@ void CGtCtrl::Run()
                                     vi, m_stVehicleInfo.nSteeringAngle);
                 }
             }
-
-            if (number == myConf.m_nAccel) {
-                //printf("Accel[%d]\n", value);
-                if (gbDevJs) {
-                    if (0 == value) {
-                        pmCar.chgThrottle(32767);
-                        pmCar.chgBrake(32767);
-                    }
-                    else if (0 < value) {
-                        pmCar.chgThrottle(32767);
-                        pmCar.chgBrake((value - 16384) * -2);
-                    }
-                    else {
-                        pmCar.chgThrottle((abs(value) - 16384) * -2);
-                        pmCar.chgBrake(32767);
-                    }
+            else if (number == myConf.m_nAccel) {
+                if (0 >= value) {
+                    pmCar.chgThrottle(32767);
                 }
                 else {
-                    pmCar.chgThrottle((65535 - value) / 1.1 + 32767);
-                    pmCar.chgBrake(32767);
+                    pmCar.chgThrottle((value - 16384) * -2);
                 }
             }
-
-            if (number == myConf.m_nBrake) {
-                //printf("Brake[%d]\n", value);
-                pmCar.chgThrottle(32767);
-                pmCar.chgBrake((65535 - value) / 64 + 32767);
+            else if (number == myConf.m_nBrake) {
+                if (0 >= value) {
+                    pmCar.chgBrake(32767);
+                }
+                else {
+                    pmCar.chgBrake((value - 16384) * -2);
+                }
             }
             break;
         case JS_EVENT_BUTTON:
@@ -425,7 +414,7 @@ void CGtCtrl::Run()
             /**
              * TURN SIGNAL(WINKER) & LIGHTSTATUS
              */
-            bool bTurnSignal = false;
+            bool bLIGHTSTATUS = false;
             if (number == myConf.m_nWinkR) {
                 if (value != 0) {
 
@@ -440,7 +429,7 @@ void CGtCtrl::Run()
                     int wpos =
                         m_stVehicleInfo.nWinkerPos == WINKER_RIGHT ? 1 : 0;
                     SendVehicleInfo(dataport_def, vi, wpos);
-                    bTurnSignal = true;
+                    bLIGHTSTATUS = true;
                 }
             }
 
@@ -457,14 +446,37 @@ void CGtCtrl::Run()
                     int wpos =
                         m_stVehicleInfo.nWinkerPos == WINKER_LEFT ? 2 : 0;
                     SendVehicleInfo(dataport_def, vi, wpos);
-                    bTurnSignal = true;
+                    bLIGHTSTATUS = true;
                 }
             }
 
-            if (true == bTurnSignal) {
+            if (number == myConf.m_nHeadLight) {
+                if (0 != value) {
+                    if (false == m_stVehicleInfo.bHeadLight) { // HEAD LIGHT OFF(false) ?
+                        m_stVehicleInfo.bHeadLight = true; // HEAD LIGHT ON(true)
+                    }
+                    else {
+                        m_stVehicleInfo.bHeadLight = false; // HEAD LIGHT OFF(false)
+                    }
+                    bLIGHTSTATUS = true;
+                }
+            }
+
+            if (true == bLIGHTSTATUS) {
                 const size_t LSsz = 8;                                                              
-                char data[LSsz];                                                                    
+                char data[LSsz];
+                    // 0:LIGHT HEAD STATUS ON(1)/OFF(0)
+                    // 1:LEFT WINKER STATUS ON(1)/OFF(0)
+                    // 2:RIGHT WINKER STATUS ON(1)/OFF(0)
+                    // 3:PARKING
+                    // 4:FOG LAMP
+                    // 5:HAZARD
+                    // 6:BRAKE
+                    // 7:HIGHBEAM
                 memset(data, 0, sizeof(data));
+                if (true == m_stVehicleInfo.bHeadLight) { // HEAD LIGHT ON ?
+                    data[0] = 1;
+                }
                 if (WINKER_LEFT == m_stVehicleInfo.nWinkerPos) {
                     data[1] = 1;
                 }
