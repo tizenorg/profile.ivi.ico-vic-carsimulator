@@ -226,15 +226,15 @@ bool AmbpiCommIF::init(const char* uri, const char* protocolName)
     }
     m_uri = uri;
     m_pNm = protocolName;
-	int loopcount = 0;
-	do {
-		m_context = ico_uws_create_context(uri, protocolName);
-		if (NULL != m_context) {
-			break;
-		}
+    int loopcount = 0;
+    do {
+        m_context = ico_uws_create_context(uri, protocolName);
+        if (NULL != m_context) {
+            break;
+        }
         cerr << m_pNm << ":Failed to create context." << endl;
-		usleep (500 * 1000);
-	} while (m_context == NULL && ++loopcount < RECONNECT_WS);
+        usleep (500 * 1000);
+    } while (m_context == NULL && ++loopcount < RECONNECT_WS);
     int r = ico_uws_set_event_cb(m_context, _icoUwsCallback, (void*)this);
     if (ICO_UWS_ERR_NONE != r) {
         cerr << m_pNm << ":Failed to callback entry(" << r << ")." << endl;

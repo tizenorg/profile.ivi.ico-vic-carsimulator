@@ -7,6 +7,7 @@ Description=Carsimulator supported by G25 and G27.
 After=ambd.service
 
 [Service]
+Type=oneshot
 ExecStart=/usr/bin/carsim
 
 [Install]

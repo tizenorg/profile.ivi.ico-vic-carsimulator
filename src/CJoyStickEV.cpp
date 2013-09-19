@@ -309,9 +309,11 @@ bool CJoyStickEV::deviceGrab(int fd)
     if (0 > fd) {
         return false;
     }
+#if 0           /* no need grab on weston-1.2.x */
     if (0 > ioctl(fd, EVIOCGRAB, 1)) {
          return false;
     }
+#endif
     m_grab = true;
     return true;
 }
@@ -327,9 +329,11 @@ bool CJoyStickEV::deviceGrabRelese(int fd)
     if (false == m_grab) {
         return false;
     }
+#if 0           /* no need grab on weston-1.2.x */
     if (0 > ioctl(fd, EVIOCGRAB, 0)) {
         return false;
     }
+#endif
     m_grab = false;
     return true;
 }

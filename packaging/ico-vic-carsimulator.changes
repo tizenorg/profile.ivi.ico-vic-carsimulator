@@ -1,3 +1,7 @@
+* Thu Sep 19 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130917.224135@6e9f63d
+- 0.9.04 release.
+-- Coexistence with ico-uxf-device-input-controller(for GTForce).
+
 * Mon Sep 16 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130612.174818@b57c2a9
 - 0.9.03 release.
 -- Retry to Websocket connection failure.
