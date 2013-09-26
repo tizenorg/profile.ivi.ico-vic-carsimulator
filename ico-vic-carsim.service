@@ -7,10 +7,4 @@ Description=Carsimulator supported by G25 and G27.
 After=ambd.service
 
 [Service]
-Type=oneshot
-ExecStart=/usr/bin/carsim
-
-[Install]
-WantedBy=multi-user.target
-
-
+ExecStart=/usr/bin/ico-vic-carsim

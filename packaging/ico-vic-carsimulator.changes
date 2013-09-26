@@ -1,3 +1,10 @@
+* Thu Sep 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130919.204144@1135dfb
+- 0.9.05 release.
+-- the program name is changed to "ico-vic-carsim" from "carsim".
+-- a service file is moved from systemd/system to systemd/user.
+-- the start method is changed to the Wants target of the service file of ico-uxf-homescreen
+-- internal bug fix
+
 * Thu Sep 19 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130917.224135@6e9f63d
 - 0.9.04 release.
 -- Coexistence with ico-uxf-device-input-controller(for GTForce).

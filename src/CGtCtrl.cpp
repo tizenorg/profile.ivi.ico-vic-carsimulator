@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013, TOYOTA MOTOR CORPORATION.
  *
- * This program is licensed under the terms and conditions of the 
+ * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -49,8 +49,8 @@ short g_BREAKE_SAMPLE_SPACE_SIZE = 10;
 bool   g_bSentInMileage   = true;
 bool   g_bSentInChgLngLat = true;
 double g_SentInMileage    = 3.0;  // 3 meter
-double g_StartLatitude    =  35.47945; 
-double g_StartLongitude   = 139.40026; 
+double g_StartLatitude    =  35.47945;
+double g_StartLongitude   = 139.40026;
 double g_GoalLatitude     =  35.49746;
 double g_GoalLongitude    = 139.40504;
 
@@ -126,7 +126,6 @@ bool CGtCtrl::Initialize()
     m_stVehicleInfo.bHeadLight = false; // HEAD LIGHT OFF(false)
 
     m_bFirstOpen = true;
-
     if (true == gbDevJs) {
         myJS = new CJoyStick;
         int nRet = myJS->Open();
@@ -162,6 +161,7 @@ bool CGtCtrl::Initialize()
                 break;
             }
             delete myJS;
+            myJS = NULL;
         } while ((++i) < g_JoyStickTypeNum);
         if (myJS == NULL) {
             return false;
@@ -463,7 +463,7 @@ void CGtCtrl::Run()
             }
 
             if (true == bLIGHTSTATUS) {
-                const size_t LSsz = 8;                                                              
+                const size_t LSsz = 8;
                 char data[LSsz];
                     // 0:LIGHT HEAD STATUS ON(1)/OFF(0)
                     // 1:LEFT WINKER STATUS ON(1)/OFF(0)
@@ -535,8 +535,8 @@ void CGtCtrl::Run()
          * SHIFT
          */
         if (nShiftPosBK != m_stVehicleInfo.nShiftPos) {
-            const size_t ShiftSz = 3;                                                              
-            int data[ShiftSz];                                                                    
+            const size_t ShiftSz = 3;
+            int data[ShiftSz];
             int val = pmCar.getValue();
             data[0] = pmCar.getSelectGear();
             if (data[0] > 10) {
@@ -1099,7 +1099,7 @@ void CGtCtrl::SetMQKeyData(char *buf, unsigned int bufsize, long &mtype,
  * @return  bool    true:success,false:failure
  */
 /*--------------------------------------------------------------------------*/
-bool CGtCtrl::sendVehicleInfo( /*int & send_id, long priority, */ 
+bool CGtCtrl::sendVehicleInfo( /*int & send_id, long priority, */
                               ProtocolType type, const char *key, void *data,
                               unsigned int unit_size, int unit_cnt)
 {

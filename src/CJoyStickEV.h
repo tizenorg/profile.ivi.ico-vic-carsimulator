@@ -36,8 +36,6 @@ class CJoyStickEV : public CJoyStick
     virtual int Read(int *number, int *value);
     virtual int ReadData();
     virtual bool getDeviceName(int fd, char* devNM, size_t sz);
-    bool deviceGrab(int fd);
-    bool deviceGrabRelese(int fd);
     int getJS_EVENT_BUTTON(int& num, int& val, const struct input_event& s);
     int getJS_EVENT_AXIS(int& num, int& val, const struct input_event& s);
     int calc1pm32767(int val, const struct input_absinfo& ai);
@@ -54,7 +52,6 @@ class CJoyStickEV : public CJoyStick
         E_ABSMAX    /* */
     };
     struct input_absinfo m_absInf[E_ABSMAX];
-    bool m_grab;
     std::string m_devName;
   private:
 };

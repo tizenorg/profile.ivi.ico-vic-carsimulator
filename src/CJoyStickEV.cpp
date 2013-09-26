@@ -41,7 +41,6 @@ CJoyStickEV::CJoyStickEV()
 {
     // TODO Auto-generated constructor stub
     memset(m_absInf, 0, sizeof(m_absInf));
-    m_grab = false;
     m_devName = std::string(D_DEV_NAME_G27);
 }
 
@@ -62,22 +61,13 @@ int CJoyStickEV::Open()
     /**
      * get device file
      */
-    printf("Open Device Name is %s\n", m_devName.c_str());
+    printf("Open Device Name is <%s>\n", m_devName.c_str());
     int rfd = deviceOpen(dirpath, nameparts, m_devName, devPath);
     if (0 > rfd) {
         printf("Can't open device.\n");
         return rfd;
     }
     m_nJoyStickID = rfd;
-    /**
-     * set grab
-     */
-    printf("Check Grab is %s(%d)\n", m_devName.c_str(), rfd);
-    if (false == deviceGrab(rfd)) {
-        printf("Can't get grab.\n");
-        Close();
-        return -1;
-    }
 
     fds.fd = m_nJoyStickID;
     return m_nJoyStickID;
@@ -91,11 +81,6 @@ int CJoyStickEV::Close()
 {
     if (0 > m_nJoyStickID) {
         return 0;
-    }
-    if (true == m_grab) {
-        if (false == deviceGrabRelese(m_nJoyStickID)) {
-            cerr << "EVENT device GRAB Relese Fail" << endl;
-        }
     }
     return CJoyStick::Close();
 }
@@ -298,43 +283,6 @@ bool CJoyStickEV::getDeviceName(int fd, char* devNM, size_t sz)
     if (0 > ioctl(fd, EVIOCGNAME(sz), devNM)) {
         return false;
     }
-    return true;
-}
-
-/**
- * @brief device grab
- */
-bool CJoyStickEV::deviceGrab(int fd)
-{
-    if (0 > fd) {
-        return false;
-    }
-#if 0           /* no need grab on weston-1.2.x */
-    if (0 > ioctl(fd, EVIOCGRAB, 1)) {
-         return false;
-    }
-#endif
-    m_grab = true;
-    return true;
-}
-
-/**
- * @brief device grab relese
- */
-bool CJoyStickEV::deviceGrabRelese(int fd)
-{
-    if (0 > fd) {
-        return false;
-    }
-    if (false == m_grab) {
-        return false;
-    }
-#if 0           /* no need grab on weston-1.2.x */
-    if (0 > ioctl(fd, EVIOCGRAB, 0)) {
-        return false;
-    }
-#endif
-    m_grab = false;
     return true;
 }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013, TOYOTA MOTOR CORPORATION.
  *
- * This program is licensed under the terms and conditions of the 
+ * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -11,7 +11,7 @@
  * @brief   main entry point
  */
 
-
+#include <sys/types.h>
 #include <iostream>
 #include <unistd.h>
 #include <getopt.h>
@@ -24,7 +24,6 @@ bool gbDevJs = false;
 
 int main(int argc, char **argv)
 {
-
     // parse cmd line
     int result = 0;
     bool bUseGps = false;
@@ -102,6 +101,11 @@ int main(int argc, char **argv)
         }
     }
     else {
+        // change to super user
+        if (setuid(0) < 0)  {
+            printf("can not set super user\n");
+        }
+
         CGtCtrl myGtCtrl;
         b = myGtCtrl.Initialize();
 
@@ -109,13 +113,10 @@ int main(int argc, char **argv)
             myGtCtrl.m_bUseGps = bUseGps;
 
             myGtCtrl.Run();
-
-            myGtCtrl.Terminate();
         }
-        else {
-            myGtCtrl.Terminate();
-        }
+        myGtCtrl.Terminate();
     }
+    return 0;
 }
 
 /**

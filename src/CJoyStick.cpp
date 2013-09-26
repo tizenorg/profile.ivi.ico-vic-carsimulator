@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013, TOYOTA MOTOR CORPORATION.
  *
- * This program is licensed under the terms and conditions of the 
+ * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -58,7 +58,7 @@ int CJoyStick::Open()
             ioctl(m_nJoyStickID, JSIOCGAXES, &m_ucAxes);
             ioctl(m_nJoyStickID, JSIOCGBUTTONS, &m_ucButtons);
             ioctl(m_nJoyStickID, JSIOCGNAME(sizeof(m_strDevName)),
-                  &m_strDevName);
+                  m_strDevName);
 
             printf
                 ("JoyStick ID[%d], JoyStick Name[%s], Axis[%d], Buttons[%d]\n",
@@ -178,8 +178,10 @@ int CJoyStick::deviceOpen(const std::string& dirNM,
     }
     int r = -1;
     for (size_t i = 0; i < sz; i++) {
-        int fd = open(files[i].c_str(), O_RDWR | O_NONBLOCK);
+        int fd = open(files[i].c_str(), O_RDONLY | O_NONBLOCK);
         if (0 > fd) { /* open error */
+            fprintf(stderr,"CJoyStick::deviceOpen: Event Device.%d(%s) Open Error<%d>\n",
+                    i, files[i].c_str(), errno);
             continue; /* next device */
         }
         char sDevNm[128];
@@ -225,10 +227,10 @@ void CJoyStick::getDevices(const std::string& dir,
         do {
             dent = readdir(dp);
             if (dent != NULL) {
-                bool bMatching = true;
+                bool bMatching = false;
                 for (int i = 0; i < mssz; i++) {
-                    if (0 == strstr(dent->d_name, matching[i].c_str())) {
-                        bMatching = false;
+                    if (strstr(dent->d_name, matching[i].c_str())) {
+                        bMatching = true;
                         break;  /* break of for */
                     }
                 }
