@@ -1,0 +1,8 @@
+# Description=Path activation for ico-vic-carsim
+
+[Path]
+PathExists=/tmp/amd_ready
+Unit=ico-vic-carsim.service
+
+[Install]
+WantedBy=weston.target
