@@ -37,7 +37,7 @@ class CJoyStickEV : public CJoyStick
     virtual int ReadData();
     virtual bool getDeviceName(int fd, char* devNM, size_t sz);
     int getJS_EVENT_BUTTON(int& num, int& val, const struct input_event& s);
-    int getJS_EVENT_AXIS(int& num, int& val, const struct input_event& s);
+    virtual int getJS_EVENT_AXIS(int& num, int& val, const struct input_event& s);
     int calc1pm32767(int val, const struct input_absinfo& ai);
     int calc2p65535(int val, const struct input_absinfo& ai);
     int calc3p32767(int val, const struct input_absinfo& ai);

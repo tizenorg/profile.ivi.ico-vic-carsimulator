@@ -236,6 +236,8 @@ inline int CAvgBrake::calcPressure(int brakeVal) const
 #define D_SHIFT_VALUE_PARKING  0
 #define D_SHIFT_VALUE_REVERSE  128
 #define D_SHIFT_VALUE_NEUTRAL  64
+#define D_SHIFT_VALUE_SIXTH    6
+#define D_SHIFT_VALUE_FIFTH    5
 #define D_SHIFT_VALUE_DRIVE    4
 #define D_SHIFT_VALUE_THIRD    3
 #define D_SHIFT_VALUE_SECOND   2

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([ico-vic-carsim], [0.0.9], [shibata@mac.tec.toyota.co.jp])
+AC_INIT([ico-vic-carsim], [0.9.06], [shibata@mac.tec.toyota.co.jp])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
