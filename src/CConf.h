@@ -70,6 +70,7 @@ class CConf
     double m_fLng;
     double m_fLat;
     std::string m_sDeviceName;
+	std::string m_sAmbConfigName;
 
 };
 

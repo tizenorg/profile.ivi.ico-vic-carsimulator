@@ -555,12 +555,12 @@ void CAvgGear::setShiftMT(E_AT_GEAR tm) {
     case E_SHIFT_MT_FIFTH :
         m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_MT_FIFTH;
-        m_transmissionValue = D_SHIFT_VALUE_DRIVE;
+        m_transmissionValue = D_SHIFT_VALUE_FIFTH;
         break;
     case E_SHIFT_MT_SIXTH :
         m_transmissionOLD = m_transmission;
         m_transmission = E_SHIFT_MT_SIXTH;
-        m_transmissionValue = D_SHIFT_VALUE_DRIVE;
+        m_transmissionValue = D_SHIFT_VALUE_SIXTH;
         break;
     case E_SHIFT_REVERSE :
         m_transmissionOLD = m_transmission;
@@ -616,22 +616,12 @@ void CAvgCar::chgThrottle(int throttle)
 {
     int x = abs((throttle - 32767));
     if (false == m_engine.isActive()) {
-        if ((true == isNeutral()) || (true == isParking())) {
-            m_engine.ignitionStart(D_RPM_IGNITION_VALUE);
-        }
-
-        for (int i; i < D_SAMPLE_SPACE_ACCPEDAL; i++) {
-            m_accPedalOpen.setSample(x);
-        }
-
-        return;
+        m_engine.ignitionStart();
     }
-    else {
-        m_engine.chgThrottle(x);
-        m_accPedalOpen.setSample(x);
-        m_bChgThrottle = true;
-        m_valThrottle  = x;
-    }
+    m_engine.chgThrottle(x);
+    m_accPedalOpen.setSample(x);
+    m_bChgThrottle = true;
+    m_valThrottle  = x;
 }
 
 /**

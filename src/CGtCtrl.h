@@ -29,7 +29,6 @@
 #include <string>
 
 #include <cstddef>
-#include <strstream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -53,6 +52,7 @@ const useconds_t g_sleeptime = 10000; // = 10milli sec = 0.01 sec
 const int g_JoyStickTypeNum = 3;
 const std::string g_ConfPathG25 = "/etc/ico-vic-carsim/G25.conf";
 const std::string g_ConfPathG27 = "/etc/ico-vic-carsim/G27.conf";
+const std::string g_RouteListFile = "/etc/ico-vic-carsim/route.txt";
 #define D_RUNLOOP_INTERVAL_COUNT  5
 #define D_RUNLOOP_INTERVAL_COUNT2 50
 
@@ -270,6 +270,7 @@ class CGtCtrl
     CConf myConf;
     CJoyStick* myJS;
     bool m_bUseGps;
+    bool m_bDemoRunning;
 
     bool Initialize();
     bool Terminate();
@@ -322,6 +323,7 @@ class CGtCtrl
     void SetMQKeyData(char *buf, unsigned int bufsize, long &mtype,
                       const char *key, char status[], unsigned int size);
     void CheckSendResult(int mqid);
+	void LoadRouteList();
 };
 
 #endif /* CGTCTRL_H_ */

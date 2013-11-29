@@ -15,6 +15,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <getopt.h>
+#include <string>
 #include "CGtCtrl.h"
 using namespace std;
 
@@ -30,9 +31,10 @@ int main(int argc, char **argv)
     bool bTestMode = false;
     bool b;
     bool comFlg = false;
+	bool bDemoRunning = false;
 
     // parse command line
-    while ((result = getopt(argc, argv, "jhvgct")) != -1) {
+    while ((result = getopt(argc, argv, "jhvgctr")) != -1) {
         switch (result) {
         case 'h':
             printf("Usage: CarSim_Daemon [-g]\n");
@@ -56,6 +58,9 @@ int main(int argc, char **argv)
         case 'j':
             gbDevJs = true;
             break;
+		case 'r':
+			bDemoRunning = true;
+			break;
         }
     }
 
@@ -107,11 +112,11 @@ int main(int argc, char **argv)
         }
 
         CGtCtrl myGtCtrl;
+		myGtCtrl.m_bUseGps = bUseGps;
+		myGtCtrl.m_bDemoRunning = bDemoRunning;
         b = myGtCtrl.Initialize();
 
         if (b) {
-            myGtCtrl.m_bUseGps = bUseGps;
-
             myGtCtrl.Run();
         }
         myGtCtrl.Terminate();

@@ -1,3 +1,8 @@
+* Fri Nov 29 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> ivi_oct_m2@67d1f89
+- 0.9.07 release
+-- Abolition:Check the neutral gear and the parking gear of the engine ignition
+-- BugFix: TIVI-1912, 1918, 2126
+
 * Thu Sep 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130919.204144@1135dfb
 - 0.9.05 release.
 -- the program name is changed to "ico-vic-carsim" from "carsim".
