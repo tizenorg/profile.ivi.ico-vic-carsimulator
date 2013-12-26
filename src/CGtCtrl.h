@@ -323,7 +323,7 @@ class CGtCtrl
     void SetMQKeyData(char *buf, unsigned int bufsize, long &mtype,
                       const char *key, char status[], unsigned int size);
     void CheckSendResult(int mqid);
-    void LoadRouteList();
+	void LoadRouteList();
 };
 
 #endif /* CGTCTRL_H_ */

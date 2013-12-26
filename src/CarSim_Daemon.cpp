@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     bool bTestMode = false;
     bool b;
     bool comFlg = false;
-    bool bDemoRunning = false;
+	bool bDemoRunning = false;
 
     // parse command line
     while ((result = getopt(argc, argv, "jhvgctr")) != -1) {
@@ -58,9 +58,9 @@ int main(int argc, char **argv)
         case 'j':
             gbDevJs = true;
             break;
-        case 'r':
-            bDemoRunning = true;
-            break;
+		case 'r':
+			bDemoRunning = true;
+			break;
         }
     }
 
@@ -112,8 +112,8 @@ int main(int argc, char **argv)
         }
 
         CGtCtrl myGtCtrl;
-        myGtCtrl.m_bUseGps = bUseGps;
-        myGtCtrl.m_bDemoRunning = bDemoRunning;
+		myGtCtrl.m_bUseGps = bUseGps;
+		myGtCtrl.m_bDemoRunning = bDemoRunning;
         b = myGtCtrl.Initialize();
 
         if (b) {

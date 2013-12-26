@@ -63,9 +63,9 @@ void CConf::LoadConfig(const char*filePath)
     memset(devname, 0, sizeof(devname));
     CConf::GetConfig(m_strConfPath, "DEVICE", "NAME", "Driving Force GT", devname, sizeof(devname));
     m_sDeviceName = std::string(devname);
-    char ambconfig[64];
-    memset(ambconfig, 0, sizeof(ambconfig));
-    CConf::GetConfig(m_strConfPath, "AMBCONFIG", "NAME", "/etc/ambd/config", ambconfig, sizeof(ambconfig));
+	char ambconfig[64];
+	memset(ambconfig, 0, sizeof(ambconfig));
+	CConf::GetConfig(m_strConfPath, "AMBCONFIG", "NAME", "/etc/ambd/config", ambconfig, sizeof(ambconfig));
     m_sAmbConfigName = std::string(ambconfig);
 
     printf("Configuration[%s]:\n",m_sDeviceName.c_str());

@@ -1,3 +1,7 @@
+* Thu Dec 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/20131217.231400@acfe75b
+- 0.9.08 release
+-- revise: add manifest file for SMACK label setting.
+
 * Fri Nov 29 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> ivi_oct_m2@67d1f89
 - 0.9.07 release
 -- Abolition:Check the neutral gear and the parking gear of the engine ignition

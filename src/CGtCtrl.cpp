@@ -198,10 +198,10 @@ bool CGtCtrl::Initialize()
     double location[] = { myConf.m_fLat, myConf.m_fLng, 0 };
     SendVehicleInfo(dataport_def, vi, &location[0], 3);
 
-    if (m_bDemoRunning) {
-        std::cout << "Demo Mode." << std::endl;
-        LoadRouteList();
-    }
+	if (m_bDemoRunning) {
+		std::cout << "Demo Mode." << std::endl;
+		LoadRouteList();
+	}
 
     return true;
 }
@@ -259,9 +259,9 @@ void CGtCtrl::Run()
     int nShiftPosBK = -1;
     char shiftpos = 255;
 
-    bool nextPointFlg = false;
-    geoData next;
-    double dx, dy, rad, theta;
+	bool nextPointFlg = false;
+	geoData next;
+	double dx, dy, rad, theta;
 
     while (g_bStopFlag) {
 
@@ -272,31 +272,31 @@ void CGtCtrl::Run()
         switch (type) {
         case JS_EVENT_AXIS:
             if (number == myConf.m_nSteering) {
-                int angle = 0;
+				int angle = 0;
                 if (value != 0) {
                     m_stVehicleInfo.nSteeringAngle +=
                         (value * 10 / 65536 - m_stVehicleInfo.nSteeringAngle);
                 }
-                if (value < 0) {
-                    angle = (((double)value / 32768) * 450) + 450 + 270;
-                    angle %= 360;
-                    //std:: cout << "value * (450 / 32768) = " << ((double)value / 32768) * 450 << "\n";
-                    //std:: cout << "value * (450 / 32768) + 450 = " << (double)value * (450 / 32768) + 450 << "\n";
-                    //std:: cout << "value * (450 / 32768) + 450 + 270 = " << (double)value * (450 / 32768) + 450 + 270 << "\n";
-                }
-                else {
-                    angle = ((double)value / 32768) * 450;
-                    angle %= 360;
-                    //std:: cout << "value * (450 / 32768) = " << ((double)value / 32768) * 450 << "\n";
-                }
-                //std::cout << "Steering value = " << value << " -> angle = " << angle << std::endl;
+				if (value < 0) {
+					angle = (((double)value / 32768) * 450) + 450 + 270;
+					angle %= 360;
+					//std:: cout << "value * (450 / 32768) = " << ((double)value / 32768) * 450 << "\n";
+					//std:: cout << "value * (450 / 32768) + 450 = " << (double)value * (450 / 32768) + 450 << "\n";
+					//std:: cout << "value * (450 / 32768) + 450 + 270 = " << (double)value * (450 / 32768) + 450 + 270 << "\n";
+				}
+				else {
+					angle = ((double)value / 32768) * 450;
+					angle %= 360;
+					//std:: cout << "value * (450 / 32768) = " << ((double)value / 32768) * 450 << "\n";
+				}
+				//std::cout << "Steering value = " << value << " -> angle = " << angle << std::endl;
                 {
                     const char *vi = "STEERING";
 
-                    /*
+					/*
                     SendVehicleInfo(dataport_def,
                                     vi, m_stVehicleInfo.nSteeringAngle);
-                    */
+					*/
                     SendVehicleInfo(dataport_def,
                                     vi, angle);
                 }
@@ -558,9 +558,9 @@ void CGtCtrl::Run()
          * VELOCITY (SPEED)
          */
         int speedNew = (int)pmCar.getSpeed();
-        if (speedNew > 180) {
-            speedNew = 180;
-        }
+		if (speedNew > 180) {
+			speedNew = 180;
+		}
         if (speedNew != nSpeed) {
             SendVehicleInfo(dataport_def, sVELOCITY, speedNew);
             m_stVehicleInfo.nVelocity = speedNew;
@@ -587,123 +587,123 @@ void CGtCtrl::Run()
         }
 
         if (iwc == 0) {
-            if (m_bDemoRunning) {
-                next = routeList.front();
-                dy = next.lat - m_stVehicleInfo.fLat;
-                dx = next.lng - m_stVehicleInfo.fLng;
-                theta = (double) atan2(dy, dx) * 180.0 / (atan(1.0) * 4.0);
-                if (theta < 0) {
-                    theta = 360.0 + theta;
-                }
+			if (m_bDemoRunning) {
+				next = routeList.front();
+				dy = next.lat - m_stVehicleInfo.fLat;
+				dx = next.lng - m_stVehicleInfo.fLng;
+				theta = (double) atan2(dy, dx) * 180.0 / (atan(1.0) * 4.0);
+				if (theta < 0) {
+					theta = 360.0 + theta;
+				}
 
-                rad = (theta / 180.0) * PIE;
+				rad = (theta / 180.0) * PIE;
 
-                m_stVehicleInfo.nDirection = 90 - theta;
-                if (m_stVehicleInfo.nDirection < 0) {
-                    m_stVehicleInfo.nDirection = 360 + m_stVehicleInfo.nDirection;
-                }
-                SendVehicleInfo(dataport_def, sDIRECTION, m_stVehicleInfo.nDirection);
+				m_stVehicleInfo.nDirection = 90 - theta;
+				if (m_stVehicleInfo.nDirection < 0) {
+					m_stVehicleInfo.nDirection = 360 + m_stVehicleInfo.nDirection;
+				}
+				SendVehicleInfo(dataport_def, sDIRECTION, m_stVehicleInfo.nDirection);
 
-                dir = static_cast<double>(m_stVehicleInfo.nDirection);
-                double runMeters = pmCar.getTripmeter();
-                pmCar.tripmeterReset();
-                double tmpLat = m_stVehicleInfo.fLat;
-                double tmpLng = m_stVehicleInfo.fLng;
-                POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
-                double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
-                SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
-                m_stVehicleInfo.fLat = pNEW.lat;
-                m_stVehicleInfo.fLng = pNEW.lng;
+				dir = static_cast<double>(m_stVehicleInfo.nDirection);
+				double runMeters = pmCar.getTripmeter();
+				pmCar.tripmeterReset();
+				double tmpLat = m_stVehicleInfo.fLat;
+				double tmpLng = m_stVehicleInfo.fLng;
+				POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
+				double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
+				SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
+				m_stVehicleInfo.fLat = pNEW.lat;
+				m_stVehicleInfo.fLng = pNEW.lng;
 
-                if (rad == 0) {
-                    if (m_stVehicleInfo.fLng >= next.lng) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad > 0 && rad < 0.5 * PIE) {
-                    if (m_stVehicleInfo.fLng >= next.lng
-                        && m_stVehicleInfo.fLat >= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad == 0.5 * PIE) {
-                    if (m_stVehicleInfo.fLat >= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad > 0.5 * PIE && rad < PIE) {
-                    if (m_stVehicleInfo.fLng <= next.lng
-                        && m_stVehicleInfo.fLat >= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad == PIE) {
-                    if (m_stVehicleInfo.fLng <= next.lng) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad > PIE && rad < 1.5 * PIE) {
-                    if (m_stVehicleInfo.fLng <= next.lng
-                        && m_stVehicleInfo.fLat <= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
-                else if (rad == 1.5 * PIE) {
-                    if (m_stVehicleInfo.fLat <= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
-                else {
-                    if (m_stVehicleInfo.fLng >= next.lng
-                        && m_stVehicleInfo.fLat <= next.lat) {
-                        nextPointFlg = true;
-                    }
-                }
+				if (rad == 0) {
+					if (m_stVehicleInfo.fLng >= next.lng) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad > 0 && rad < 0.5 * PIE) {
+					if (m_stVehicleInfo.fLng >= next.lng
+						&& m_stVehicleInfo.fLat >= next.lat) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad == 0.5 * PIE) {
+					if (m_stVehicleInfo.fLat >= next.lat) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad > 0.5 * PIE && rad < PIE) {
+					if (m_stVehicleInfo.fLng <= next.lng
+						&& m_stVehicleInfo.fLat >= next.lat) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad == PIE) {
+					if (m_stVehicleInfo.fLng <= next.lng) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad > PIE && rad < 1.5 * PIE) {
+					if (m_stVehicleInfo.fLng <= next.lng
+						&& m_stVehicleInfo.fLat <= next.lat) {
+						nextPointFlg = true;
+					}
+				}
+				else if (rad == 1.5 * PIE) {
+					if (m_stVehicleInfo.fLat <= next.lat) {
+						nextPointFlg = true;
+					}
+				}
+				else {
+					if (m_stVehicleInfo.fLng >= next.lng
+						&& m_stVehicleInfo.fLat <= next.lat) {
+						nextPointFlg = true;
+					}
+				}
 
-                if (nextPointFlg) {
-                    std::cout << "routeList.size() = " << routeList.size() << std::endl;
-                    routeList.pop();
-                    if (routeList.empty()) {
-                        LoadRouteList();
-                        m_stVehicleInfo.fLng = myConf.m_fLng;
-                        m_stVehicleInfo.fLat = myConf.m_fLat;
-                    }
-                    next = routeList.front();
-                    nextPointFlg = false;
-                }
-            }
-            else {
-                /**
-                  * DIRECTION (AZIMUTH)
-                  * Front wheel steering angle
-                  */
-                double runMeters = pmCar.getTripmeter();
-                pmCar.tripmeterReset();
-                if (0 != runMeters) {
-                    double stear = (double)m_stVehicleInfo.nSteeringAngle;
-                    double dirNEW = CalcAzimuth(dir, stear, runMeters);
-                    int nDir = (int)dirNEW;
-                    dir = dirNEW;
-                    if (nDir != m_stVehicleInfo.nDirection) {
-                        SendVehicleInfo(dataport_def, sDIRECTION, nDir);
-                        m_stVehicleInfo.nDirection = nDir;
-                    }
-                }
-                /**
-                  * LOCATION
-                  */
-                if ((!m_bUseGps) && (0 != runMeters)) {
-                    double tmpLat = m_stVehicleInfo.fLat;
-                    double tmpLng = m_stVehicleInfo.fLng;
-                    POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
-                    if ((tmpLat != pNEW.lat) || (tmpLng != pNEW.lng)){
-                        double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
-                        SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
-                        m_stVehicleInfo.fLat = pNEW.lat;
-                        m_stVehicleInfo.fLng = pNEW.lng;
-                    }
-                }
-            } 
+				if (nextPointFlg) {
+					std::cout << "routeList.size() = " << routeList.size() << std::endl;
+					routeList.pop();
+					if (routeList.empty()) {
+						LoadRouteList();
+						m_stVehicleInfo.fLng = myConf.m_fLng;
+						m_stVehicleInfo.fLat = myConf.m_fLat;
+					}
+					next = routeList.front();
+					nextPointFlg = false;
+				}
+			}
+			else {
+				/**
+				  * DIRECTION (AZIMUTH)
+				  * Front wheel steering angle
+				  */
+				double runMeters = pmCar.getTripmeter();
+				pmCar.tripmeterReset();
+				if (0 != runMeters) {
+					double stear = (double)m_stVehicleInfo.nSteeringAngle;
+					double dirNEW = CalcAzimuth(dir, stear, runMeters);
+					int nDir = (int)dirNEW;
+					dir = dirNEW;
+					if (nDir != m_stVehicleInfo.nDirection) {
+						SendVehicleInfo(dataport_def, sDIRECTION, nDir);
+						m_stVehicleInfo.nDirection = nDir;
+					}
+				}
+				/**
+				  * LOCATION
+				  */
+				if ((!m_bUseGps) && (0 != runMeters)) {
+					double tmpLat = m_stVehicleInfo.fLat;
+					double tmpLng = m_stVehicleInfo.fLng;
+					POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
+					if ((tmpLat != pNEW.lat) || (tmpLng != pNEW.lng)){
+						double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
+						SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
+						m_stVehicleInfo.fLat = pNEW.lat;
+						m_stVehicleInfo.fLng = pNEW.lng;
+					}
+				}
+			} 
         }
         if (0 == iwc) {
             iwc = D_RUNLOOP_INTERVAL_COUNT;
@@ -1077,13 +1077,13 @@ void CGtCtrl::Run2()
 
             if (nextPointFlg) {
                 if (routeList.empty()) {
-                    LoadRouteList();
-                    m_stVehicleInfo.fLng = myConf.m_fLng;
-                    m_stVehicleInfo.fLat = myConf.m_fLat;
+					LoadRouteList();
+					m_stVehicleInfo.fLng = myConf.m_fLng;
+					m_stVehicleInfo.fLat = myConf.m_fLat;
                 }
-                next = routeList.front();
-                routeList.pop();
-                nextPointFlg = false;
+				next = routeList.front();
+				routeList.pop();
+				nextPointFlg = false;
             }
         }
     }
@@ -1769,53 +1769,53 @@ void CGtCtrl::CheckSendResult(int mqid)
 }
 
 void CGtCtrl::LoadRouteList() {
-    std::cout << "LoadRouteList:orgmsgQueue[" << orgmsgQueue << "]\n";
-    if (orgmsgQueue == "") {
-        std::ifstream fin;
-        fin.open(g_RouteListFile.c_str());
-        if (!fin) {
-            std::cerr << "Can't read " << g_RouteListFile << std::endl;
-        }
-        std::string line;
-        while (fin && getline(fin, line)) {
-            orgmsgQueue.append(line);
-            orgmsgQueue.append("\n");
-        }
-        msgQueue = orgmsgQueue;
-        fin.close();
-    }
-    else {
-        msgQueue = orgmsgQueue;
-    }
-    if (msgQueue.size() > 0) {
-        char buf[32];
-        int pos = 0;
-        int lastidx = 0;
-        geoData tmpGeo;
-        int i = 0;
+	std::cout << "LoadRouteList:orgmsgQueue[" << orgmsgQueue << "]\n";
+	if (orgmsgQueue == "") {
+		std::ifstream fin;
+		fin.open(g_RouteListFile.c_str());
+		if (!fin) {
+			std::cerr << "Can't read " << g_RouteListFile << std::endl;
+		}
+		std::string line;
+		while (fin && getline(fin, line)) {
+			orgmsgQueue.append(line);
+			orgmsgQueue.append("\n");
+		}
+		msgQueue = orgmsgQueue;
+		fin.close();
+	}
+	else {
+		msgQueue = orgmsgQueue;
+	}
+	if (msgQueue.size() > 0) {
+		char buf[32];
+		int pos = 0;
+		int lastidx = 0;
+		geoData tmpGeo;
+		int i = 0;
 
-        tmpGeo.lat = GEORESET;
-        tmpGeo.lng = GEORESET;
+		tmpGeo.lat = GEORESET;
+		tmpGeo.lng = GEORESET;
 
-        for (i = 0; i < (int) msgQueue.size(); i++) {
-            if (msgQueue[i] == ',') {
-                tmpGeo.lat = atof(buf);
-                pos = 0;
-            }
-            else if (msgQueue[i] == '\n') {
-                tmpGeo.lng = atof(buf);
-                pos = 0;
+		for (i = 0; i < (int) msgQueue.size(); i++) {
+			if (msgQueue[i] == ',') {
+				tmpGeo.lat = atof(buf);
+				pos = 0;
+			}
+			else if (msgQueue[i] == '\n') {
+				tmpGeo.lng = atof(buf);
+				pos = 0;
 
-                routeList.push(tmpGeo);
-                lastidx = i;
-                tmpGeo.lat = GEORESET;
-                tmpGeo.lng = GEORESET;
-            }
-            else {
-                buf[pos++] = msgQueue[i];
-            }
-        }
-    }
+				routeList.push(tmpGeo);
+				lastidx = i;
+				tmpGeo.lat = GEORESET;
+				tmpGeo.lng = GEORESET;
+			}
+			else {
+				buf[pos++] = msgQueue[i];
+			}
+		}
+	}
 }
 
 /**

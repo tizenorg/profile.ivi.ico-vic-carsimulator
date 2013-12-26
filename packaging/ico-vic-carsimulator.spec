@@ -1,7 +1,7 @@
 Name:       ico-vic-carsimulator
 Summary:    CarSimulator
-Version:    0.9.07
-Release:    2.3
+Version:    0.9.08
+Release:    1.1
 Group:      System Environment/Daemons
 License:    Apache 2.0
 Source0:    %{name}-%{version}.tar.bz2
@@ -46,6 +46,7 @@ install -m 0644 ico-vic-carsim.service %{buildroot}%{_unitdir_user}/ico-vic-cars
 %postun -p /sbin/ldconfig
 
 %files
+%manifest %{name}.manifest
 %attr(4755,root,root) %{_bindir}/ico-vic-carsim
 %defattr(-,root,root,-)
 %{_bindir}/*
