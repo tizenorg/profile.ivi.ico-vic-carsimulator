@@ -1,3 +1,9 @@
+* Mon Mar 17 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/tizen_ivi_release/20140108.220608@33934a4
+- 0.9.10 release
+-- bug fix: A establishment of websockets fails. 
+-- bug fix: A gear change event is sometimes lost.
+-- Add "--uid" command option.
+
 * Thu Dec 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/20131217.231400@acfe75b
 - 0.9.08 release
 -- revise: add manifest file for SMACK label setting.

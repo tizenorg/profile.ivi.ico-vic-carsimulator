@@ -14,9 +14,13 @@
 #include <sys/types.h>
 #include <iostream>
 #include <unistd.h>
-#include <getopt.h>
-#include <string>
+#include <strings.h>
+#include <stdlib.h>
+#include <errno.h>
+//#include <string>
 #include "CGtCtrl.h"
+#include "ico-util/ico_log.h"
+
 using namespace std;
 
 #define VERSION "0.1.2"
@@ -26,43 +30,63 @@ bool gbDevJs = false;
 int main(int argc, char **argv)
 {
     // parse cmd line
-    int result = 0;
     bool bUseGps = false;
     bool bTestMode = false;
     bool b;
     bool comFlg = false;
-	bool bDemoRunning = false;
+    bool bDemoRunning = false;
+    int ii;
 
+//    printf("ico-vic-carsim: userid='%s', uid=%d, euid=%d)\n", cuserid(NULL), getuid(), geteuid());
     // parse command line
-    while ((result = getopt(argc, argv, "jhvgctr")) != -1) {
-        switch (result) {
-        case 'h':
+    for (ii = 1; ii < argc; ii++) {
+        if (strcmp( argv[ii], "-h") == 0) {
             printf("Usage: CarSim_Daemon [-g]\n");
             printf("  -g\t Get GPS form smartphone\n");
             return 0;
-            break;
-        case 'v':
+        }
+        else if (strcmp( argv[ii], "-v") == 0) {
             printf("CarSim_Daemon version:%s\n", VERSION);
             return 0;
-            break;
-        case 'g':
+        }
+        else if (strcmp( argv[ii], "-g") == 0) {
             bUseGps = true;
-            break;
-        case 'c':
+        }
+        else if (strcmp( argv[ii], "-c") == 0) {
             printf("Using amb plug-in I/F\n");
             comFlg = true;
-            break;
-        case 't':
+        }
+        else if (strcmp( argv[ii], "-t") == 0) {
             bTestMode = true;
-            break;
-        case 'j':
+        }
+        else if (strcmp( argv[ii], "-j") == 0) {
             gbDevJs = true;
-            break;
-		case 'r':
-			bDemoRunning = true;
-			break;
+        }
+        else if (strcmp( argv[ii], "-r") == 0) {
+            bDemoRunning = true;
+        }
+        else if (strcasecmp( argv[ii], "--user") == 0) {
+            ii ++;
+            if (ii < argc)  {
+                if (strcmp(argv[ii], cuserid(NULL)) != 0)    {
+                    printf("ico-vic-carsim: abort(cannot run in a '%s' [uid=%d, euid=%d])\n", cuserid(NULL), getuid(), geteuid());
+                    return -1;
+                }
+            }
+        }
+        else if (strcasecmp( argv[ii], "--uid") == 0) {
+            ii ++;
+            if (ii < argc)  {
+                if (strtol(argv[ii], NULL, 10) != (long)getuid()) {
+                    printf("ico-vic-carsim: abort(cannot run in a '%s' [uid=%d, euid=%d])\n", cuserid(NULL), getuid(), geteuid());
+                    return -1;
+                }
+            }
         }
     }
+
+    ico_log_open("ico-vic-carsim");
+    ICO_INF( "START_MODULE ico-vic-carsim" );
 
     if (comFlg) {
         CGtCtrl myGtCtrl;
@@ -77,6 +101,7 @@ int main(int argc, char **argv)
             myGtCtrl.Terminate();
         }
 
+        ICO_INF( "END_MODULE ico-vic-carsim" );
         return 0;
     }
     if (bTestMode) {
@@ -108,12 +133,12 @@ int main(int argc, char **argv)
     else {
         // change to super user
         if (setuid(0) < 0)  {
-            printf("can not set super user\n");
+            printf("can not set super user [errno=%d]\n", errno);
         }
 
         CGtCtrl myGtCtrl;
-		myGtCtrl.m_bUseGps = bUseGps;
-		myGtCtrl.m_bDemoRunning = bDemoRunning;
+        myGtCtrl.m_bUseGps = bUseGps;
+        myGtCtrl.m_bDemoRunning = bDemoRunning;
         b = myGtCtrl.Initialize();
 
         if (b) {
@@ -121,6 +146,8 @@ int main(int argc, char **argv)
         }
         myGtCtrl.Terminate();
     }
+
+    ICO_INF( "END_MODULE ico-vic-carsim" );
     return 0;
 }
 

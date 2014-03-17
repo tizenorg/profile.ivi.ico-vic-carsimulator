@@ -22,12 +22,109 @@
 #include <string.h>
 #include <poll.h>
 #include <string>
-#include <vector>
+#include <queue>
+#include <pthread.h>
+#include <errno.h>
+#include <sys/time.h>
+#include "ico-util/ico_log.h"
 
 #define D_DEV_DIR_PATH      "/dev/input/"
 #define D_DEV_NAME_PARTS_JS "js"
 #define D_DEV_NAME_G25      "Driving Force GT"
 #define D_DEV_NAME_G27      "G27 Racing Wheel"
+
+template <typename T>
+class CJoyStickQueue
+{
+public:
+    CJoyStickQueue()
+    {
+/*
+        pthread_mutex_init(&mutex, NULL);
+        pthread_cond_init(&cond, NULL);
+*/
+        mutex = PTHREAD_MUTEX_INITIALIZER;
+        cond = PTHREAD_COND_INITIALIZER;
+    }
+
+    ~CJoyStickQueue()
+    {
+        if (pthread_mutex_destroy(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_destroy error[errno=%d]", errno);
+        }
+        if (pthread_cond_destroy(&cond) != 0) {
+            ICO_ERR("pthread_cond_destroy error[errno=%d]", errno);
+        }
+    }
+
+    int size()
+    {
+        if (pthread_mutex_lock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_lock error[errno=%d]", errno);
+        }
+        int ret = mQueue.size();
+        if (pthread_mutex_unlock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_unlock error[errno=%d]", errno);
+        }
+        return ret;
+    }
+
+    int pop(T& item)
+    {
+        struct timeval now;
+        struct timespec timeout;
+        long nsec;
+
+        if (pthread_mutex_lock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_lock error[errno=%d]", errno);
+        }
+
+        if (!mQueue.size()) {
+            gettimeofday(&now, NULL);
+            nsec = now.tv_usec * 1000 + 50*1000000;
+            timeout.tv_nsec = nsec % 1000000000;
+            if (nsec < 1000000000) {
+                timeout.tv_sec = now.tv_sec;
+            } else {
+                timeout.tv_sec = now.tv_sec + 1;
+            }
+            if (pthread_cond_timedwait(&cond, &mutex, &timeout) != 0){
+                if (pthread_mutex_unlock(&mutex) != 0) {
+                    ICO_ERR("pthread_mutex_unlock error[errno=%d]", errno);
+                }
+                return -1;
+            }
+        }
+
+        item = mQueue.front();
+        mQueue.pop();
+
+        if (pthread_mutex_unlock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_unlock error[errno=%d]", errno);
+        }
+
+        return 0;
+    }
+
+    void push(T item)
+    {
+        if (pthread_mutex_lock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_lock error[errno=%d]", errno);
+        }
+
+        mQueue.push(item);
+        pthread_cond_signal(&cond);
+
+        if (pthread_mutex_unlock(&mutex) != 0) {
+            ICO_ERR("pthread_mutex_unlock error[errno=%d]", errno);
+        }
+    }
+
+private:
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    std::queue<T> mQueue;
+};
 
 class CJoyStick
 {
@@ -54,8 +151,10 @@ class CJoyStick
                     const std::vector<std::string>& matching,
                     std::vector<std::string>& filesList) const;
     virtual bool getDeviceName(int fd, char* devNM, size_t sz);
+    bool recvJS();
+    static void *loop(void *arg);
 
-protected:
+  protected:
     char m_strJoyStick[64];
     int m_nJoyStickID;
 
@@ -65,6 +164,9 @@ protected:
 
     fd_set m_stSet;
     struct pollfd fds;
+     CJoyStickQueue<struct js_event > queue;
+ private:
+    pthread_t  m_threadid;
 };
 
 #endif /* CJOYSTICK_H_ */

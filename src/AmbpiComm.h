@@ -76,10 +76,14 @@ class AmbpiCommIF
     bool poll();
     static void *loop(void *arg);
     bool isContextMatch(const ico_uws_context* context) const;
-    bool threadCondWait();
+//    bool threadCondWait();
     void event_cb(const ico_uws_evt_e event, const void *id,
                   const ico_uws_detail *detail, void *user_data);
     void reset_ercode();
+    char *getM_id()
+    {
+        return (char *)m_id;
+    };
   private:
     bool init(const char* uri, const char* protocolName);
 
@@ -112,7 +116,7 @@ inline bool AmbpiCommIF::isContextMatch(const ico_uws_context* context) const
 /**
  * @brief thread wait
  * @return true:success / false:fail
- */
+ *//*
 inline bool AmbpiCommIF::threadCondWait()
 {
     if (0 != pthread_cond_wait(&m_cond, &m_mutex)) {
@@ -120,7 +124,7 @@ inline bool AmbpiCommIF::threadCondWait()
     }
     return true;
 }
-
+*/
 /**
  * @brief reset error code
  */

@@ -7,4 +7,4 @@ Description=Carsimulator supported by G25 and G27.
 After=ambd.service
 
 [Service]
-ExecStart=/usr/bin/ico-vic-carsim
+ExecStart=/usr/bin/ico-vic-carsim --uid 5000

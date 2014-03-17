@@ -23,6 +23,10 @@
 #include <dirent.h>
 #include <string.h>
 #include "CJoyStick.h"
+
+#include "ico-util/ico_log.h"
+#include <errno.h>
+
 using namespace std;
 
 /**
@@ -74,6 +78,11 @@ int CJoyStick::Open()
             }
             else {
                 fds.fd = m_nJoyStickID;
+                if (pthread_create(&m_threadid, NULL, CJoyStick::loop,
+                                   (void *) this) != 0) {
+                    cerr << "Failed to create thread." << endl;
+                    return -1;
+                }
                 break;
             }
         }
@@ -114,6 +123,48 @@ int CJoyStick::Close()
 }
 
 /**
+ * @brief joystick event read loop entrance
+ * @return
+ */
+void *CJoyStick::loop(void *arg)
+{
+    CJoyStick *src = reinterpret_cast < CJoyStick * >(arg);
+    return (void *) src->recvJS();
+}
+
+/**
+ * @brief joystick event read loop
+ * @return
+ */
+bool CJoyStick::recvJS()
+{
+    while(1) {
+        fds.events = POLLIN;
+        if (poll(&fds, 1, -1) < 0) {
+            ICO_ERR("poll error");
+            return false;
+        }
+        if (0 != (fds.revents & POLLIN)) {
+            /**
+             * read event
+             */
+            struct js_event jse;
+            int r;
+            while ((r = read(m_nJoyStickID, &jse, sizeof(jse))) > 0) {
+                queue.push(jse);
+                if (sizeof(jse) != r) {
+                    ICO_DBG("data not enough [%d/%d]", r, sizeof(jse));
+                }
+            }
+            if (0 > r && errno !=11) {  /* read error */
+                ICO_ERR("read error[ret=%d, errno=%d]", r, errno);
+            }
+        }
+    }
+    return false;
+}
+
+/**
  * @brief get input value
  * @retval  return kind of input(axis or button), if error occurred, return negative value
  * @param[in/out]   nubmer  number of button or axis
@@ -122,33 +173,24 @@ int CJoyStick::Close()
 int CJoyStick::Read(int *number, int *value)
 {
     struct js_event jse;
+    int r=-1;
 
-    fds.events = POLLIN;
-
-    if (poll(&fds, 1, 50) == 0) {
+    r = queue.pop(jse);
+    if (r != 0) {
+        *number = -1;
+        *value = -1;
         return -1;
     }
 
-    if (fds.revents & POLLIN) {
-        int r = read(m_nJoyStickID, &jse, sizeof(jse));
+    int type = jse.type;
+    type = type & JS_EVENT_INIT;
 
-        int type = jse.type;
-        type = type & JS_EVENT_INIT;
-
-        if ((r >= 0) && (type == 0)) {
-            r = jse.type & ~JS_EVENT_INIT;
-            *number = jse.number;
-            *value = jse.value;
-        }
-        else {
-            *number = -1;
-            *value = -1;
-        }
-        return r;
+    if (type == 0) {
+        r = jse.type & ~JS_EVENT_INIT;
+        *number = jse.number;
+        *value = jse.value;
     }
-    else {
-        return -1;
-    }
+    return r;
 }
 
 int CJoyStick::ReadData()

@@ -35,6 +35,10 @@
 #include "CJoyStick.h"
 #include "CJoyStickEV.h"
 #include "CConf.h"
+
+#include "ico-util/ico_log.h"
+#include <errno.h>
+
 using namespace std;
 
 CJoyStickEV::CJoyStickEV()
@@ -70,6 +74,13 @@ int CJoyStickEV::Open()
     m_nJoyStickID = rfd;
 
     fds.fd = m_nJoyStickID;
+
+    if (pthread_create(&m_threadid, NULL, CJoyStickEV::loop,
+                       (void *) this) != 0) {
+        cerr << "Failed to create thread." << endl;
+        return -1;
+    }
+
     return m_nJoyStickID;
 }
 
@@ -86,6 +97,48 @@ int CJoyStickEV::Close()
 }
 
 /**
+ * @brief joystick event read loop entrance
+ * @return
+ */
+void *CJoyStickEV::loop(void *arg)
+{
+    CJoyStickEV *src = reinterpret_cast < CJoyStickEV * >(arg);
+    return (void *) src->recvEV();
+}
+
+/**
+ * @brief joystick event read loop
+ * @return
+ */
+bool CJoyStickEV::recvEV()
+{
+    while(1) {
+        fds.events = POLLIN;
+        if (poll(&fds, 1, -1) < 0) {
+            ICO_ERR("poll error");
+            return false;
+        }
+        if (0 != (fds.revents & POLLIN)) {
+            /**
+             * read event
+             */
+            struct input_event ie;
+            int rc;
+            while ((rc = read(m_nJoyStickID, &ie, sizeof(ie))) > 0) {
+                queue.push(ie);
+                if (sizeof(ie) != rc) {
+                    ICO_DBG("data not enough [%d/%d]", rc, sizeof(ie));
+                }
+            }
+            if (0 > rc && errno !=11) {  /* read error(errno:11=EAGAIN) */
+                ICO_ERR("read error[ret=%d, errno=%d]", rc, errno);
+            }
+        }
+    }
+    return false;
+}
+
+/**
  * @brief joystick event read
  * @param nubmer joystick event data(convert input_event.code)
  * @param value joystick event data(convert input_event.value)
@@ -95,24 +148,15 @@ int CJoyStickEV::Close()
 int CJoyStickEV::Read(int *num, int *val)
 {
     /**
-     * pollong
-     */
-    fds.events = POLLIN;
-    if (poll(&fds, 1, 50) == 0) {
-        return -1;
-    }
-
-    if (0 == (fds.revents & POLLIN)) {
-        return -1;
-    }
-    /**
      * read event
      */
     struct input_event ie;
-    int rc = read(m_nJoyStickID, &ie, sizeof(ie));
-    if (0 > rc) {  /* read error */
+    int ret;
+    ret = queue.pop(ie);
+    if (ret != 0) {
         return -1;
     }
+
     /**
      * event convert
      */

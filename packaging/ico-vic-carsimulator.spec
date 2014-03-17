@@ -1,6 +1,6 @@
 Name:       ico-vic-carsimulator
 Summary:    CarSimulator
-Version:    0.9.08
+Version:    0.9.10
 Release:    1.1
 Group:      System Environment/Daemons
 License:    Apache 2.0

@@ -42,6 +42,8 @@ class CJoyStickEV : public CJoyStick
     int calc2p65535(int val, const struct input_absinfo& ai);
     int calc3p32767(int val, const struct input_absinfo& ai);
     int calc3p32767Reverse(int val, const struct input_absinfo& ai);
+    bool recvEV();
+    static void *loop(void *arg);
     enum {
         E_ABSX = 0, /* ABS_X */
         E_ABSY,     /* ABS_Y */
@@ -53,7 +55,9 @@ class CJoyStickEV : public CJoyStick
     };
     struct input_absinfo m_absInf[E_ABSMAX];
     std::string m_devName;
+    CJoyStickQueue<struct input_event > queue;
   private:
+    pthread_t  m_threadid;
 };
 
 #endif /* CJOYSTICKEV_H_ */

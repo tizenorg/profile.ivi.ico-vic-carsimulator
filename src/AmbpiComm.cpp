@@ -16,6 +16,9 @@
 #include <vector>
 #include <unistd.h>
 #include "AmbpiComm.h"
+
+#include "ico-util/ico_log.h"
+
 using namespace std;
 
 static vector<AmbpiCommIF*> _commList;
@@ -164,6 +167,8 @@ bool AmbpiCommIF::send(const char *msg, const int size)
     reset_ercode();
     ico_uws_send(m_context, m_id, (unsigned char*)msg, (size_t)size);
     if ((ICO_UWS_ERR_UNKNOWN != m_ercode) && (ICO_UWS_ERR_NONE != m_ercode)) {
+        ICO_DBG("uri[%s], protocol[%s], m_context[%x], m_id[%x], msg[%s], size[%d]",
+            m_uri.c_str(), m_pNm.c_str(), (int)m_context, (int)m_id, msg, size);
         return false;
     }
     return true;
@@ -262,6 +267,8 @@ void AmbpiCommIF::event_cb(const ico_uws_evt_e event, const void *id,
     switch (event) {
     case ICO_UWS_EVT_RECEIVE:
     {
+        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_RECEIVE[m_id=%x]",
+            m_uri.c_str(), m_pNm.c_str(), (int)m_id);
         if (NULL == d) {
             cerr << m_pNm << ":Failed Receive event" << endl;
             break;
@@ -283,15 +290,8 @@ void AmbpiCommIF::event_cb(const ico_uws_evt_e event, const void *id,
     case ICO_UWS_EVT_OPEN:
     {
         m_id = (void*)id;
-        if (0 != pthread_mutex_lock(&m_mutex)) {
-            cerr << m_pNm << ":Failed to lock mutex" << endl;
-        }
-        if (0 != pthread_cond_signal(&m_cond)) {
-            cerr << m_pNm << ":Failed to issue cond_signal" << endl;
-        }
-        if (0 != pthread_mutex_unlock(&m_mutex)) {
-            cerr << m_pNm << ":Failed to unlock mutex" << endl;
-        }
+        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_OPEN[m_id=%x]",
+            m_uri.c_str(), m_pNm.c_str(), (int)m_id);
         break;
     }
     case ICO_UWS_EVT_ERROR:
