@@ -1,3 +1,5 @@
+
+
 Name:       ico-vic-carsimulator
 Summary:    CarSimulator
 Version:    0.9.10
@@ -12,11 +14,8 @@ Requires:       ico-vic-amb-plugin
 Requires:       ico-uxf-utilities
 BuildRequires:  make
 BuildRequires:  automake
-BuildRequires:  boost-devel
-#BuildRequires:  libwebsockets-devel
 BuildRequires:  glib2-devel
 BuildRequires:  json-glib-devel
-#BuildRequires:  ico-uxf-utilities
 BuildRequires:  ico-uxf-utilities-devel
 
 %description
