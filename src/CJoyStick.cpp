@@ -175,7 +175,7 @@ int CJoyStick::Read(int *number, int *value)
     struct js_event jse;
     int r=-1;
 
-    r = queue.pop(jse);
+    r = queue.pop(jse, 50.0);
     if (r != 0) {
         *number = -1;
         *value = -1;

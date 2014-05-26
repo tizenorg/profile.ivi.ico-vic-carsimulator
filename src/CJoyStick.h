@@ -25,7 +25,8 @@
 #include <queue>
 #include <pthread.h>
 #include <errno.h>
-#include <sys/time.h>
+#include <time.h>
+#include <math.h>
 #include "ico-util/ico_log.h"
 
 #define D_DEV_DIR_PATH      "/dev/input/"
@@ -69,25 +70,24 @@ public:
         return ret;
     }
 
-    int pop(T& item)
+    int pop(T& item, double msec)
     {
-        struct timeval now;
+        struct timespec now;
         struct timespec timeout;
-        long nsec;
+        double sec;
 
         if (pthread_mutex_lock(&mutex) != 0) {
             ICO_ERR("pthread_mutex_lock error[errno=%d]", errno);
         }
 
         if (!mQueue.size()) {
-            gettimeofday(&now, NULL);
-            nsec = now.tv_usec * 1000 + 50*1000000;
-            timeout.tv_nsec = nsec % 1000000000;
-            if (nsec < 1000000000) {
-                timeout.tv_sec = now.tv_sec;
-            } else {
-                timeout.tv_sec = now.tv_sec + 1;
-            }
+            clock_gettime(CLOCK_REALTIME, &now);
+            sec = (double)now.tv_sec*1000000000.0 + (double)now.tv_nsec
+                    + msec*1000000.0;
+            timeout.tv_sec = (time_t)(sec / 1000000000.0);
+            timeout.tv_nsec = fmod(sec, 1000000000.0);
+//            ICO_DBG("[%ld.%ld]-[%ld.%ld]", now.tv_sec, now.tv_nsec,
+//                    timeout.tv_sec, timeout.tv_nsec);
             if (pthread_cond_timedwait(&cond, &mutex, &timeout) != 0){
                 if (pthread_mutex_unlock(&mutex) != 0) {
                     ICO_ERR("pthread_mutex_unlock error[errno=%d]", errno);

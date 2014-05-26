@@ -1,8 +1,6 @@
-
-
 Name:       ico-vic-carsimulator
 Summary:    CarSimulator
-Version:    0.9.10
+Version:    0.9.11
 Release:    1.1
 Group:      System Environment/Daemons
 License:    Apache 2.0
@@ -14,8 +12,11 @@ Requires:       ico-vic-amb-plugin
 Requires:       ico-uxf-utilities
 BuildRequires:  make
 BuildRequires:  automake
+BuildRequires:  boost-devel
+#BuildRequires:  libwebsockets-devel
 BuildRequires:  glib2-devel
 BuildRequires:  json-glib-devel
+#BuildRequires:  ico-uxf-utilities
 BuildRequires:  ico-uxf-utilities-devel
 
 %description

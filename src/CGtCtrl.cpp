@@ -20,8 +20,8 @@
 #include "CGtCtrl.h"
 #include "CAvgCar.h"
 #include "CCalc.h"
-
-#include <sys/time.h>
+#include <time.h>
+#include <math.h>
 #include "ico-util/ico_log.h"
 
 extern bool gbDevJs;
@@ -240,19 +240,14 @@ void CGtCtrl::Run()
     /**
       * INTERVAL CONTROL
       */
-    struct timeval now;
-    struct timeval timeout;
-    long usec;
-    int intervalctl = 0;
+    struct timespec now;
+    double timeout;
+    double dnow;
+    int intervalctl = 1;
     int fcycle = 0;
-    gettimeofday(&now, NULL);
-    usec = now.tv_usec + D_RUNLOOP_INTERVAL_COUNT*10*1000;
-    timeout.tv_usec = usec % 1000000;
-    if (usec < 1000000) {
-        timeout.tv_sec = now.tv_sec;
-    } else {
-        timeout.tv_sec = now.tv_sec + 1;
-    }
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    timeout = (double)now.tv_sec*1000000000.0 + (double)now.tv_nsec
+            + D_RUNLOOP_INTERVAL_COUNT*10*1000000.0;
     /**
       * LAST STEERING VALUE
       */
@@ -290,22 +285,14 @@ void CGtCtrl::Run()
 
         m_sendMsgInfo.clear();
 
-        gettimeofday(&now, NULL);
-        if((timeout.tv_sec == now.tv_sec && timeout.tv_usec <= now.tv_sec)
-            || (timeout.tv_sec < now.tv_sec)) {
-            intervalctl = (intervalctl+1)%3;
-            if (intervalctl) {
-                fcycle = intervalctl;
-            }
-            usec = now.tv_usec + D_RUNLOOP_INTERVAL_COUNT*10*1000;
-            timeout.tv_usec = usec % 1000000;
-            if (usec < 1000000) {
-                timeout.tv_sec = now.tv_sec;
-            } else {
-                timeout.tv_sec = now.tv_sec + 1;
-            }
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        dnow = (double)now.tv_sec*1000000000.0 + (double)now.tv_nsec;
+        if(dnow >= timeout) {
+            intervalctl = (2-intervalctl)+1;
+            fcycle = intervalctl;
+//            ICO_DBG("T.O:intervalctl[%d], fcycle[%d], now[%lf], timeout[%lf]", intervalctl, fcycle, dnow, timeout);
+            timeout = dnow + D_RUNLOOP_INTERVAL_COUNT*10*1000000.0;
         }
-//      ICO_DBG("intervalctl[%d], fcycle[%d]", intervalctl, fcycle);
 
         switch (type) {
         case JS_EVENT_AXIS:
@@ -607,10 +594,7 @@ void CGtCtrl::Run()
                 SendVehicleInfo(dataport_def, sACCPEDAL_OPEN, apoNEW);
                 nAccPedalOpen = apoNEW;
             }
-        } /* if (fcycle == 2) */
 
-        /* 50ms cycle */
-        if (fcycle != 0) {
             /**
              * BRAKE PRESSURE
              */
@@ -633,8 +617,10 @@ void CGtCtrl::Run()
                 m_stVehicleInfo.nVelocity = speedNew;
                 nSpeed = speedNew;
             }
+        } /* if (fcycle == 2) */
 
-            if (m_bDemoRunning) {
+        if (fcycle != 0) {
+            if (m_bDemoRunning) {    /* 50ms cycle */
                 next = routeList.front();
                 dy = next.lat - m_stVehicleInfo.fLat;
                 dx = next.lng - m_stVehicleInfo.fLng;
@@ -719,35 +705,40 @@ void CGtCtrl::Run()
                     nextPointFlg = false;
                 }
             }
-            else {
-                /**
-                  * DIRECTION (AZIMUTH)
-                  * Front wheel steering angle
-                  */
-                double runMeters = pmCar.getTripmeter();
-                pmCar.tripmeterReset();
-                if (0 != runMeters) {
-                    double stear = (double)m_stVehicleInfo.nSteeringAngle;
-                    double dirNEW = CalcAzimuth(dir, stear, runMeters);
-                    int nDir = (int)dirNEW;
-                    dir = dirNEW;
-                    if (nDir != m_stVehicleInfo.nDirection) {
-                        SendVehicleInfo(dataport_def, sDIRECTION, nDir);
-                        m_stVehicleInfo.nDirection = nDir;
+            else {    /* 250ms cycle */
+                static int flag=0;
+                flag = (flag+1)%5;
+                if (flag == 4) {
+                    /**
+                      * DIRECTION (AZIMUTH)
+                      * Front wheel steering angle
+                      */
+                    double runMeters = pmCar.getTripmeter();
+                    pmCar.tripmeterReset();
+                    if (0.0 != runMeters) {
+                        double stear = (double)m_stVehicleInfo.nSteeringAngle;
+                        double dirNEW = CalcAzimuth(dir, stear, runMeters);
+                        int nDir = (int)dirNEW;
+                        dir = dirNEW;
+                        if (nDir != m_stVehicleInfo.nDirection) {
+                            SendVehicleInfo(dataport_def, sDIRECTION, nDir);
+                            m_stVehicleInfo.nDirection = nDir;
+                        }
                     }
-                }
-                /**
-                  * LOCATION
-                  */
-                if ((!m_bUseGps) && (0 != runMeters)) {
-                    double tmpLat = m_stVehicleInfo.fLat;
-                    double tmpLng = m_stVehicleInfo.fLng;
-                    POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
-                    if ((tmpLat != pNEW.lat) || (tmpLng != pNEW.lng)){
-                        double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
-                        SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
-                        m_stVehicleInfo.fLat = pNEW.lat;
-                        m_stVehicleInfo.fLng = pNEW.lng;
+                    /**
+                      * LOCATION
+                      */
+                    if ((!m_bUseGps) && (0.0 != runMeters)) {
+                        double tmpLat = m_stVehicleInfo.fLat;
+                        double tmpLng = m_stVehicleInfo.fLng;
+                        POINT pNEW = CalcDest(tmpLat, tmpLng, dir, runMeters);
+                        if ((tmpLat != pNEW.lat) || (tmpLng != pNEW.lng)){
+                            double tmpLct[] = { pNEW.lat, pNEW.lng, 0 };
+                            SendVehicleInfo(dataport_def, sLOCATION, &tmpLct[0], 3);
+                            m_stVehicleInfo.fLat = pNEW.lat;
+                            m_stVehicleInfo.fLng = pNEW.lng;
+//                          ICO_DBG("Send Location:runMeters[%lf], Lat[%lf], Lng[%lf]:flag=%d", runMeters, tmpLct[0], tmpLct[1], flag);
+                        }
                     }
                 }
             } 

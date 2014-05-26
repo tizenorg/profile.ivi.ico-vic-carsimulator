@@ -1,3 +1,7 @@
+* Mon May 26 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/panda/20140403.020001@d7849ce
+- 0.9.11 release
+-- bug fix: The input data from a handle is sometimes taken and spilt.
+
 * Mon Mar 17 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/tizen_ivi_release/20140108.220608@33934a4
 - 0.9.10 release
 -- bug fix: A establishment of websockets fails. 

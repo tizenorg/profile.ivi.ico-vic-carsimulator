@@ -152,7 +152,7 @@ int CJoyStickEV::Read(int *num, int *val)
      */
     struct input_event ie;
     int ret;
-    ret = queue.pop(ie);
+    ret = queue.pop(ie, 50.0);
     if (ret != 0) {
         return -1;
     }
