@@ -167,8 +167,8 @@ bool AmbpiCommIF::send(const char *msg, const int size)
     reset_ercode();
     ico_uws_send(m_context, m_id, (unsigned char*)msg, (size_t)size);
     if ((ICO_UWS_ERR_UNKNOWN != m_ercode) && (ICO_UWS_ERR_NONE != m_ercode)) {
-        ICO_DBG("uri[%s], protocol[%s], m_context[%x], m_id[%x], msg[%s], size[%d]",
-            m_uri.c_str(), m_pNm.c_str(), (int)m_context, (int)m_id, msg, size);
+        ICO_DBG("uri[%s], protocol[%s], m_context[%p], m_id[%p], msg[%s], size[%d]",
+            m_uri.c_str(), m_pNm.c_str(), m_context, m_id, msg, size);
         return false;
     }
     return true;
@@ -267,8 +267,8 @@ void AmbpiCommIF::event_cb(const ico_uws_evt_e event, const void *id,
     switch (event) {
     case ICO_UWS_EVT_RECEIVE:
     {
-        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_RECEIVE[m_id=%x]",
-            m_uri.c_str(), m_pNm.c_str(), (int)m_id);
+        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_RECEIVE[m_id=%p]",
+            m_uri.c_str(), m_pNm.c_str(), m_id);
         if (NULL == d) {
             cerr << m_pNm << ":Failed Receive event" << endl;
             break;
@@ -290,8 +290,8 @@ void AmbpiCommIF::event_cb(const ico_uws_evt_e event, const void *id,
     case ICO_UWS_EVT_OPEN:
     {
         m_id = (void*)id;
-        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_OPEN[m_id=%x]",
-            m_uri.c_str(), m_pNm.c_str(), (int)m_id);
+        ICO_DBG("uri[%s], protocol[%s], ICO_UWS_EVT_OPEN[m_id=%p]",
+            m_uri.c_str(), m_pNm.c_str(), m_id);
         break;
     }
     case ICO_UWS_EVT_ERROR:

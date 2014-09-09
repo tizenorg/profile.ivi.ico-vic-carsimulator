@@ -12,6 +12,9 @@ AC_PROG_CXX
 AC_PROG_CC
 
 # Checks for libraries.
+PKG_CHECK_MODULES([GLIB], [glib-2.0])
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
