@@ -14,6 +14,7 @@ BuildRequires:      automake
 BuildRequires:      glib2-devel
 BuildRequires:      json-glib-devel
 BuildRequires:      ico-uxf-utilities-devel
+BuildRequires:      pkgconfig
 
 %description
 CarSimulator is simulated driving software
